@@ -1,8 +1,11 @@
 package com.piyush.aios.ai_os.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.piyush.aios.ai_os.dto.CreateTaskRequest;
+import com.piyush.aios.ai_os.dto.UpdateTaskRequest;
 import com.piyush.aios.ai_os.entity.Goal;
 import com.piyush.aios.ai_os.entity.Task;
 import com.piyush.aios.ai_os.entity.TaskStatus;
@@ -62,6 +65,28 @@ public class TaskService {
                                 "Goal not found with id : " + goalId));
 
         return taskRepository.findByGoalId(goalId);
+
+    }
+
+    public Task updateTask(Long id, UpdateTaskRequest request) {
+
+        Task task = getTaskById(id);
+
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        task.setDueDate(request.getDueDate());
+        task.setPriority(request.getPriority());
+        task.setStatus(request.getStatus());
+
+        return taskRepository.save(task);
+
+    }
+
+    public void deleteTask(Long id) {
+
+        Task task = getTaskById(id);
+
+        taskRepository.delete(task);
 
     }
 }
