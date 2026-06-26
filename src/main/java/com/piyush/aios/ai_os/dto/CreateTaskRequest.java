@@ -2,7 +2,7 @@ package com.piyush.aios.ai_os.dto;
 
 import java.time.LocalDate;
 
-import org.apache.tomcat.util.http.parser.Priority;
+import com.piyush.aios.ai_os.entity.Priority;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
