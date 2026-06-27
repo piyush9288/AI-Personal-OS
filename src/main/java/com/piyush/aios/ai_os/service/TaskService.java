@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.piyush.aios.ai_os.dto.CreateTaskRequest;
 import com.piyush.aios.ai_os.dto.UpdateTaskRequest;
 import com.piyush.aios.ai_os.entity.Goal;
+import com.piyush.aios.ai_os.entity.GoalStatus;
 import com.piyush.aios.ai_os.entity.Task;
 import com.piyush.aios.ai_os.entity.TaskStatus;
 import com.piyush.aios.ai_os.exception.GoalNotFoundException;
@@ -45,7 +46,11 @@ public class TaskService {
 
         task.setGoal(goal);
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        updateGoalProgress(goal);
+
+        return savedTask;
     }
 
     public Task getTaskById(Long id) {
@@ -78,7 +83,11 @@ public class TaskService {
         task.setPriority(request.getPriority());
         task.setStatus(request.getStatus());
 
-        return taskRepository.save(task);
+        Task updatedTask = taskRepository.save(task);
+
+        updateGoalProgress(task.getGoal());
+
+        return updatedTask;
 
     }
 
@@ -86,7 +95,41 @@ public class TaskService {
 
         Task task = getTaskById(id);
 
+        Goal goal = task.getGoal();
+
         taskRepository.delete(task);
 
+        updateGoalProgress(goal);
+
+    }
+
+    private void updateGoalProgress(Goal goal) {
+        long totalTasks = taskRepository.countByGoalId(goal.getId());
+
+        long completedTasks = taskRepository.countByGoalIdAndStatus(
+            goal.getId(),
+            TaskStatus.COMPLETED);
+
+        if (totalTasks == 0) {
+
+            goal.setProgress(0);
+            goal.setStatus(GoalStatus.NOT_STARTED);
+
+        } else {
+            int progress = (int) ((completedTasks * 100) / totalTasks);
+
+            goal.setProgress(progress);
+
+            if (progress == 100) {
+                goal.setStatus(GoalStatus.COMPLETED);
+            } else if (progress > 0) {
+                goal.setStatus(GoalStatus.IN_PROGRESS);
+            } else {
+                goal.setStatus(GoalStatus.NOT_STARTED);
+            }
+
+        }
+
+        goalRepository.save(goal);
     }
 }

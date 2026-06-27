@@ -2,6 +2,8 @@ package com.piyush.aios.ai_os.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,6 +33,7 @@ public class Goal {
     @Enumerated(EnumType.STRING)
     private GoalStatus status;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "goal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks;
 
