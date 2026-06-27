@@ -26,6 +26,7 @@ public class GoalService {
         goal.setTitle(request.getTitle());
         goal.setDescription(request.getDescription());
         goal.setStatus(GoalStatus.NOT_STARTED);
+        goal.setProgress(0);
 
         return goalRepository.save(goal);
     }

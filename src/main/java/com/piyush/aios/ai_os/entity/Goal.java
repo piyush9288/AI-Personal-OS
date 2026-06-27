@@ -33,4 +33,6 @@ public class Goal {
 
     @OneToMany(mappedBy = "goal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks;
+
+    private Integer progress;
 }
