@@ -3,8 +3,10 @@ package com.piyush.aios.ai_os.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.piyush.aios.ai_os.dto.LoginRequest;
 import com.piyush.aios.ai_os.dto.RegisterRequest;
 import com.piyush.aios.ai_os.entity.User;
+import com.piyush.aios.ai_os.exception.InvalidCredentialsException;
 import com.piyush.aios.ai_os.exception.UserAlreadyExistsException;
 import com.piyush.aios.ai_os.repository.UserRepository;
 
@@ -37,5 +39,23 @@ public class UserService {
         );
 
         return userRepository.save(user);
+    }
+
+    public User login(LoginRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() ->
+                        new InvalidCredentialsException(
+                                "Invalid email or password"));
+
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword())) {
+
+            throw new InvalidCredentialsException(
+                    "Invalid email or password");
+        }
+
+        return user;
     }
 }

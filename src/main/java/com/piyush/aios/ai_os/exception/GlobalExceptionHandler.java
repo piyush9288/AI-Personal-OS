@@ -27,4 +27,15 @@ public class GlobalExceptionHandler {
 
         return error;
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public Map<String,String> handleInvalidCredentials(
+            InvalidCredentialsException ex){
+
+        Map<String,String> error = new HashMap<>();
+
+        error.put("error", ex.getMessage());
+
+        return error;
+    }
 }
