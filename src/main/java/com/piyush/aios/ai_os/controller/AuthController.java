@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.piyush.aios.ai_os.dto.LoginRequest;
 import com.piyush.aios.ai_os.dto.RegisterRequest;
 import com.piyush.aios.ai_os.entity.User;
 import com.piyush.aios.ai_os.service.UserService;
@@ -27,6 +28,14 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request) {
 
         return userService.register(request);
+
+    }
+
+    @PostMapping("/login")
+    public User login(
+            @Valid @RequestBody LoginRequest request) {
+
+        return userService.login(request);
 
     }
 }
