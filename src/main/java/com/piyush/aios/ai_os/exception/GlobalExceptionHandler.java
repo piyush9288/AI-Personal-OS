@@ -16,4 +16,15 @@ public class GlobalExceptionHandler {
 
         return error;
     }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public Map<String, String> handleUserAlreadyExists(
+            UserAlreadyExistsException ex) {
+
+        Map<String, String> error = new HashMap<>();
+
+        error.put("error", ex.getMessage());
+
+        return error;
+    }
 }
