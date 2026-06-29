@@ -1,5 +1,6 @@
 package com.piyush.aios.ai_os.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.piyush.aios.ai_os.dto.RegisterRequest;
@@ -10,10 +11,15 @@ import com.piyush.aios.ai_os.repository.UserRepository;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository,
+                   PasswordEncoder passwordEncoder) {
+
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
+
 
     public User register(RegisterRequest request) {
 
@@ -26,7 +32,9 @@ public class UserService {
 
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(
+                passwordEncoder.encode(request.getPassword())
+        );
 
         return userRepository.save(user);
     }
