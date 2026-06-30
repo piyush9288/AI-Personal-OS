@@ -4,22 +4,27 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.piyush.aios.ai_os.dto.LoginRequest;
+import com.piyush.aios.ai_os.dto.LoginResponse;
 import com.piyush.aios.ai_os.dto.RegisterRequest;
 import com.piyush.aios.ai_os.entity.User;
 import com.piyush.aios.ai_os.exception.InvalidCredentialsException;
 import com.piyush.aios.ai_os.exception.UserAlreadyExistsException;
 import com.piyush.aios.ai_os.repository.UserRepository;
+import com.piyush.aios.ai_os.security.JwtService;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public UserService(UserRepository userRepository,
-                   PasswordEncoder passwordEncoder) {
+                   PasswordEncoder passwordEncoder,
+                   JwtService jwtService) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
 
@@ -41,7 +46,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User login(LoginRequest request) {
+        public LoginResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
@@ -56,6 +61,8 @@ public class UserService {
                     "Invalid email or password");
         }
 
-        return user;
+        String token = jwtService.generateToken(user);
+
+        return new LoginResponse(token);
     }
 }
