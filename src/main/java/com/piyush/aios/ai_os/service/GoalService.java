@@ -54,21 +54,27 @@ public class GoalService {
                         new GoalNotFoundException("Goal not found"));
     }
 
-    public Goal updateGoal(Long id,
-                       UpdateGoalRequest request) {
+    public Goal updateGoal(Long id, UpdateGoalRequest request) {
 
-        Goal goal = getGoalById(id);
+        User currentUser = currentUserService.getCurrentUser();
+
+        Goal goal = goalRepository.findByIdAndUser(id, currentUser)
+                .orElseThrow(() ->
+                        new GoalNotFoundException("Goal not found"));
 
         goal.setTitle(request.getTitle());
         goal.setDescription(request.getDescription());
 
         return goalRepository.save(goal);
-
     }
 
     public void deleteGoal(Long id) {
 
-        Goal goal = getGoalById(id);
+        User currentUser = currentUserService.getCurrentUser();
+
+        Goal goal = goalRepository.findByIdAndUser(id, currentUser)
+                .orElseThrow(() ->
+                        new GoalNotFoundException("Goal not found"));
 
         goalRepository.delete(goal);
 

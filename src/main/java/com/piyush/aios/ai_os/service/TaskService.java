@@ -10,22 +10,27 @@ import com.piyush.aios.ai_os.entity.Goal;
 import com.piyush.aios.ai_os.entity.GoalStatus;
 import com.piyush.aios.ai_os.entity.Task;
 import com.piyush.aios.ai_os.entity.TaskStatus;
+import com.piyush.aios.ai_os.entity.User;
 import com.piyush.aios.ai_os.exception.GoalNotFoundException;
 import com.piyush.aios.ai_os.exception.TaskNotFoundException;
 import com.piyush.aios.ai_os.repository.GoalRepository;
 import com.piyush.aios.ai_os.repository.TaskRepository;
+import com.piyush.aios.ai_os.security.CurrentUserService;
 
 @Service
 public class TaskService {
 
     private final TaskRepository taskRepository;
     private final GoalRepository goalRepository;
+    private final CurrentUserService currentUserService;
 
     public TaskService(TaskRepository taskRepository,
-                       GoalRepository goalRepository) {
+                   GoalRepository goalRepository,
+                   CurrentUserService currentUserService) {
 
         this.taskRepository = taskRepository;
         this.goalRepository = goalRepository;
+        this.currentUserService = currentUserService;
     }
 
     public Task createTask(Long goalId, CreateTaskRequest request){
@@ -35,6 +40,10 @@ public class TaskService {
                     "Goal not found with id : " + goalId));
 
          Task task = new Task();
+
+        User currentUser = currentUserService.getCurrentUser();
+
+        task.setUser(currentUser);
 
 
         task.setTitle(request.getTitle());
@@ -55,16 +64,19 @@ public class TaskService {
 
     public Task getTaskById(Long id) {
 
-        return taskRepository.findById(id)
+        User currentUser = currentUserService.getCurrentUser();
+
+        return taskRepository.findByIdAndUser(id, currentUser)
                 .orElseThrow(() ->
                         new TaskNotFoundException(
                                 "Task not found with id : " + id));
-
     }
 
     public List<Task> getTasksByGoal(Long goalId) {
 
-        goalRepository.findById(goalId)
+        User currentUser = currentUserService.getCurrentUser();
+
+        Goal goal = goalRepository.findByIdAndUser(goalId, currentUser)
                 .orElseThrow(() ->
                         new GoalNotFoundException(
                                 "Goal not found with id : " + goalId));

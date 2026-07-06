@@ -52,4 +52,8 @@ public class Task {
     public void prePersist(){
         createdAt = LocalDateTime.now();
     }
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }
