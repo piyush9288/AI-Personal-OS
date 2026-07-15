@@ -15,7 +15,7 @@ import com.piyush.aios.ai_os.entity.Chat;
 import com.piyush.aios.ai_os.entity.ChatRole;
 import com.piyush.aios.ai_os.entity.Goal;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 @Service
 public class AIService {
@@ -133,5 +133,13 @@ public class AIService {
                 .getParts()
                 .get(0)
                 .getText();
+        }
+
+        public String generateSimpleResponse(String prompt) {
+
+                GeminiRequest request = createRequest(prompt);
+
+                return callGemini(request);
+
         }
 }

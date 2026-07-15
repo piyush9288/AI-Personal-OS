@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.piyush.aios.ai_os.dto.CreateTaskFromAIRequest;
 import com.piyush.aios.ai_os.dto.CreateTaskRequest;
 import com.piyush.aios.ai_os.dto.UpdateTaskRequest;
 import com.piyush.aios.ai_os.entity.Goal;
 import com.piyush.aios.ai_os.entity.GoalStatus;
+import com.piyush.aios.ai_os.entity.Priority;
 import com.piyush.aios.ai_os.entity.Task;
 import com.piyush.aios.ai_os.entity.TaskStatus;
 import com.piyush.aios.ai_os.entity.User;
@@ -34,22 +36,30 @@ public class TaskService {
     }
 
     public Task createTask(Long goalId, CreateTaskRequest request){
-        Goal goal = goalRepository.findById(goalId)
-            .orElseThrow(() ->
-                new GoalNotFoundException(
-                    "Goal not found with id : " + goalId));
+        User currentUser = currentUserService.getCurrentUser();
+
+        Goal goal = goalRepository.findByIdAndUser(goalId, currentUser)
+                .orElseThrow(() ->
+                        new GoalNotFoundException(
+                                "Goal not found with id : " + goalId));
 
          Task task = new Task();
-
-        User currentUser = currentUserService.getCurrentUser();
 
         task.setUser(currentUser);
 
 
-        task.setTitle(request.getTitle());
+        task.setTitle(request.getTitle().trim());
         task.setDescription(request.getDescription());
         task.setDueDate(request.getDueDate());
-        task.setPriority(request.getPriority());
+        if (request.getPriority() == null) {
+
+            task.setPriority(Priority.MEDIUM);
+
+        } else {
+
+            task.setPriority(request.getPriority());
+
+        }
 
         task.setStatus(TaskStatus.NOT_STARTED);
 
@@ -81,7 +91,10 @@ public class TaskService {
                         new GoalNotFoundException(
                                 "Goal not found with id : " + goalId));
 
-        return taskRepository.findByGoalId(goalId);
+        return taskRepository.findByGoalIdAndUser(
+                goalId,
+                currentUser
+        );
 
     }
 
@@ -143,5 +156,28 @@ public class TaskService {
         }
 
         goalRepository.save(goal);
+    }
+
+    public Task createTaskFromAI(CreateTaskFromAIRequest request) {
+
+        User currentUser = currentUserService.getCurrentUser();
+
+        Goal goal = goalRepository
+                .findByTitleIgnoreCaseAndUser(
+                        request.getGoalTitle(),
+                        currentUser)
+                .orElseThrow(() ->
+                        new GoalNotFoundException(
+                                "Goal not found : "
+                                        + request.getGoalTitle()));
+
+        CreateTaskRequest taskRequest =
+                new CreateTaskRequest();
+
+        taskRequest.setTitle(request.getTaskTitle());
+
+        return createTask(
+                goal.getId(),
+                taskRequest);
     }
 }

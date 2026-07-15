@@ -32,6 +32,22 @@ public class IntentDetector {
 
         }
 
+        if (text.contains("task")) {
+
+            if (text.contains("create")
+                    || text.contains("add")) {
+
+                return Intent.CREATE_TASK;
+            }
+
+            if (text.contains("show")
+                    || text.contains("list")) {
+
+                return Intent.SHOW_TASKS;
+            }
+
+        }
+
         return Intent.GENERAL;
     }
 }

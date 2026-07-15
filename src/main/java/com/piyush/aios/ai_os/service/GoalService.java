@@ -28,12 +28,15 @@ public class GoalService {
 
     public Goal createGoal(CreateGoalRequest request) {
 
+        User currentUser = currentUserService.getCurrentUser();
+
         Goal goal = new Goal();
 
         goal.setTitle(request.getTitle());
         goal.setDescription(request.getDescription());
         goal.setStatus(GoalStatus.NOT_STARTED);
         goal.setProgress(0);
+        goal.setUser(currentUser);  
 
         return goalRepository.save(goal);
     }

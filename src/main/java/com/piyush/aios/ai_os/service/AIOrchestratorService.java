@@ -4,28 +4,41 @@ import org.springframework.stereotype.Service;
 
 import com.piyush.aios.ai_os.ai.Intent;
 import com.piyush.aios.ai_os.ai.IntentDetector;
+import com.piyush.aios.ai_os.dto.CreateGoalRequest;
+import com.piyush.aios.ai_os.dto.CreateTaskFromAIRequest;
 
 import java.util.List;
 
 import com.piyush.aios.ai_os.entity.Goal;
+import com.piyush.aios.ai_os.entity.Task;
 
 @Service
 public class AIOrchestratorService {
     private final AIService aiService;
     private final IntentDetector intentDetector;
     private final GoalService goalService;
+    private final GoalParserService goalParserService;
+    private final TaskParserService taskParserService;
+    private final TaskService taskService;
 
     public AIOrchestratorService(
         AIService aiService,
         IntentDetector intentDetector,
-        GoalService goalService) {
+        GoalService goalService, GoalParserService goalParserService,
+        TaskParserService taskParserService,
+        TaskService taskService) {
 
         this.aiService = aiService;
         this.intentDetector = intentDetector;
         this.goalService = goalService;
+        this.goalParserService = goalParserService;
+        this.taskParserService = taskParserService;
+        this.taskService = taskService;
     }
 
     public String chat(String prompt) {
+
+        // TODO: Replace keyword-based IntentDetector with LLM-based intent detection.
 
         Intent intent = intentDetector.detectIntent(prompt);
 
@@ -41,10 +54,43 @@ public class AIOrchestratorService {
 
                 return aiService.generateResponse(prompt);
 
+            case CREATE_GOAL:
+
+                CreateGoalRequest goalRequest =
+                        goalParserService.parse(prompt);
+
+                Goal goal =
+                        goalService.createGoal(goalRequest);
+
+                return """
+                        ✅ Goal created successfully.
+
+                        Title: %s
+                        """
+                        .formatted(goal.getTitle());
+
+            case CREATE_TASK:
+
+                CreateTaskFromAIRequest taskRequest =
+                        taskParserService.parse(prompt);
+
+                Task task =
+                        taskService.createTaskFromAI(taskRequest);
+
+                return """
+                        ✅ Task created successfully.
+
+                        Goal : %s
+                        Task : %s
+                        """
+                        .formatted(
+                                taskRequest.getGoalTitle(),
+                                task.getTitle()
+                        );
+
             default:
 
-                return "Unsupported intent.";
-
+                return aiService.generateResponse(prompt);
         }
 
     }
