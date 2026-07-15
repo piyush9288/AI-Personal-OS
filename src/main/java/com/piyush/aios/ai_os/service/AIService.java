@@ -3,7 +3,6 @@ package com.piyush.aios.ai_os.service;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,6 +13,9 @@ import com.piyush.aios.ai_os.dto.gemini.request.PartRequest;
 import com.piyush.aios.ai_os.dto.gemini.request.GeminiRequest;
 import com.piyush.aios.ai_os.entity.Chat;
 import com.piyush.aios.ai_os.entity.ChatRole;
+import com.piyush.aios.ai_os.entity.Goal;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class AIService {
@@ -34,6 +36,35 @@ public class AIService {
         this.webClient = webClient;
         this.chatService = chatService;
     }
+
+    public String generateGoalSummary(List<Goal> goals) {
+
+        StringBuilder prompt = new StringBuilder();
+
+        prompt.append("""
+                You are AI Personal OS.
+
+                The user has the following goals:
+
+                """);
+
+        for (Goal goal : goals) {
+
+                prompt.append("- ")
+                        .append(goal.getTitle())
+                        .append("\n");
+
+        }
+
+        prompt.append("""
+
+                Summarize these goals in a friendly and motivating way.
+                """);
+
+        GeminiRequest request = createRequest(prompt.toString());
+
+        return callGemini(request);
+        }
 
     public String generateResponse(String prompt) {
         chatService.saveUserMessage(prompt);
@@ -61,23 +92,46 @@ public class AIService {
                         .toList();
 
         GeminiRequest request = new GeminiRequest(contents);
-        GeminiResponse response =
-                webClient.post()
-                        .uri(apiUrl + "?key=" + apiKey)
-                        .bodyValue(request)
-                        .retrieve()
-                        .bodyToMono(GeminiResponse.class)
-                        .block();
-
-        String aiResponse = response.getCandidates()
-                .get(0)
-                .getContent()
-                .getParts()
-                .get(0)
-                .getText();
+        String aiResponse = callGemini(request);
 
         chatService.saveAIMessage(aiResponse);
 
         return aiResponse;
     }
+
+    private GeminiRequest createRequest(String prompt) {
+
+        PartRequest part = new PartRequest(prompt);
+
+        ContentRequest content = new ContentRequest(
+                "user",
+                List.of(part)
+        );
+
+        return new GeminiRequest(
+                List.of(content)
+        );
+    }
+
+    private String callGemini(GeminiRequest request) {
+
+
+        GeminiResponse response = webClient.post()
+                .uri(apiUrl + "?key=" + apiKey)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(GeminiResponse.class)
+                .block();
+
+        if (response == null) {
+                throw new RuntimeException("Gemini returned null response");
+        }
+
+        return response.getCandidates()
+                .get(0)
+                .getContent()
+                .getParts()
+                .get(0)
+                .getText();
+        }
 }

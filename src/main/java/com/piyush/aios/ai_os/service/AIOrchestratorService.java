@@ -2,22 +2,50 @@ package com.piyush.aios.ai_os.service;
 
 import org.springframework.stereotype.Service;
 
+import com.piyush.aios.ai_os.ai.Intent;
+import com.piyush.aios.ai_os.ai.IntentDetector;
+
+import java.util.List;
+
+import com.piyush.aios.ai_os.entity.Goal;
+
 @Service
 public class AIOrchestratorService {
     private final AIService aiService;
-    private final ChatService chatService;
+    private final IntentDetector intentDetector;
+    private final GoalService goalService;
 
     public AIOrchestratorService(
         AIService aiService,
-        ChatService chatService) {
+        IntentDetector intentDetector,
+        GoalService goalService) {
 
         this.aiService = aiService;
-        this.chatService = chatService;
+        this.intentDetector = intentDetector;
+        this.goalService = goalService;
     }
 
     public String chat(String prompt) {
 
-        return aiService.generateResponse(prompt);
+        Intent intent = intentDetector.detectIntent(prompt);
+
+        switch (intent) {
+
+            case SHOW_GOALS:
+
+                List<Goal> goals = goalService.getAllGoals();
+
+                return aiService.generateGoalSummary(goals);
+
+            case GENERAL:
+
+                return aiService.generateResponse(prompt);
+
+            default:
+
+                return "Unsupported intent.";
+
+        }
 
     }
 }
