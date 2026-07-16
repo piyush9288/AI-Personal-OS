@@ -15,6 +15,7 @@ import com.piyush.aios.ai_os.dto.gemini.request.GeminiRequest;
 import com.piyush.aios.ai_os.entity.Chat;
 import com.piyush.aios.ai_os.entity.ChatRole;
 import com.piyush.aios.ai_os.entity.Goal;
+import com.piyush.aios.ai_os.entity.Task;
 
 
 
@@ -41,7 +42,9 @@ public class AIService {
     public String generateGoalSummary(List<Goal> goals) {
 
         StringBuilder prompt = new StringBuilder();
-
+        if (goals.isEmpty()) {
+                return "You don't have any goals yet. Create your first goal to get started!";
+        }
         prompt.append("""
                 You are AI Personal OS.
 
@@ -65,6 +68,41 @@ public class AIService {
         GeminiRequest request = createRequest(prompt.toString());
 
         return callGemini(request);
+        }
+
+        public String generatePendingTaskSummary(List<Task> tasks){
+                StringBuilder prompt = new StringBuilder();
+
+                if (tasks.isEmpty()) {
+                        return "🎉 Great job! You don't have any pending tasks.";
+                }
+                prompt.append("""
+                        You are AI Personal OS.
+
+                        These are pending tasks:
+                        """);
+
+                for (Task task : tasks) {
+
+                        prompt.append("- ")
+                                .append(task.getTitle())
+                                .append("\n");
+
+                }
+
+                prompt.append("""
+
+                        Summarize them in a clear and motivating way.
+
+                        Mention:
+                        - highest priority task
+                        - recommended next step
+                        - keep response under 120 words.
+                        """);
+
+                GeminiRequest request = createRequest(prompt.toString());
+
+                return callGemini(request);
         }
 
     public String generateResponse(String prompt) {
@@ -124,8 +162,13 @@ public class AIService {
                 .bodyToMono(GeminiResponse.class)
                 .block();
 
-        if (response == null) {
-                throw new RuntimeException("Gemini returned null response");
+        if (response == null
+                || response.getCandidates() == null
+                || response.getCandidates().isEmpty()) {
+
+                throw new RuntimeException(
+                        "Gemini returned an empty response."
+                );
         }
 
         return response.getCandidates()

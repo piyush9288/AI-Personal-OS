@@ -180,4 +180,15 @@ public class TaskService {
                 goal.getId(),
                 taskRequest);
     }
+
+    public List<Task> getPendingTasks() {
+
+        User currentUser =
+                currentUserService.getCurrentUser();
+
+        return taskRepository.findByUserAndStatus(
+                currentUser,
+                TaskStatus.NOT_STARTED
+        );
+    }
 }
