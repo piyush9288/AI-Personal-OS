@@ -6,6 +6,7 @@ import com.piyush.aios.ai_os.ai.Intent;
 import com.piyush.aios.ai_os.ai.IntentDetector;
 import com.piyush.aios.ai_os.dto.CreateGoalRequest;
 import com.piyush.aios.ai_os.dto.CreateTaskFromAIRequest;
+import com.piyush.aios.ai_os.dto.dashboard.DashboardResponse;
 
 import java.util.List;
 
@@ -20,13 +21,15 @@ public class AIOrchestratorService {
     private final GoalParserService goalParserService;
     private final TaskParserService taskParserService;
     private final TaskService taskService;
+    private final DashboardService dashboardService;
 
     public AIOrchestratorService(
         AIService aiService,
         IntentDetector intentDetector,
         GoalService goalService, GoalParserService goalParserService,
         TaskParserService taskParserService,
-        TaskService taskService) {
+        TaskService taskService,
+        DashboardService dashboardService) {
 
         this.aiService = aiService;
         this.intentDetector = intentDetector;
@@ -34,6 +37,7 @@ public class AIOrchestratorService {
         this.goalParserService = goalParserService;
         this.taskParserService = taskParserService;
         this.taskService = taskService;
+        this.dashboardService = dashboardService;
     }
 
     public String chat(String prompt) {
@@ -87,6 +91,15 @@ public class AIOrchestratorService {
                                 taskRequest.getGoalTitle(),
                                 task.getTitle()
                         );
+
+            case DASHBOARD:
+
+                DashboardResponse dashboard =
+                            dashboardService.getDashboard();
+
+                return aiService.generateDashboardSummary(
+                        dashboard
+                );
 
             default:
 

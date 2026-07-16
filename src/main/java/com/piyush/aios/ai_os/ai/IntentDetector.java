@@ -48,6 +48,15 @@ public class IntentDetector {
 
         }
 
+        if (text.contains("dashboard")
+                || text.contains("progress")
+                || text.contains("how am i doing")
+                || text.contains("statistics")
+                || text.contains("summary")) {
+
+            return Intent.DASHBOARD;
+        }
+
         return Intent.GENERAL;
     }
 }

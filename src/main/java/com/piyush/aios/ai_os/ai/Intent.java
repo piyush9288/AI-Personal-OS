@@ -14,5 +14,7 @@ public enum Intent {
 
     CREATE_TASK,
 
-    SHOW_TASKS
+    SHOW_TASKS,
+
+    DASHBOARD
 }

@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.piyush.aios.ai_os.dto.dashboard.DashboardResponse;
 import com.piyush.aios.ai_os.dto.gemini.GeminiResponse;
 import com.piyush.aios.ai_os.dto.gemini.request.ContentRequest;
 import com.piyush.aios.ai_os.dto.gemini.request.PartRequest;
@@ -136,6 +137,50 @@ public class AIService {
         }
 
         public String generateSimpleResponse(String prompt) {
+
+                GeminiRequest request = createRequest(prompt);
+
+                return callGemini(request);
+
+        }
+
+        public String generateDashboardSummary(DashboardResponse dashboard) {
+
+                String prompt = """
+                        You are AI Personal OS.
+
+                        Analyze the dashboard statistics.
+
+                        Total Goals : %d
+
+                        Completed Goals : %d
+
+                        Total Tasks : %d
+
+                        Completed Tasks : %d
+
+                        Pending Tasks : %d
+
+                        Overall Progress : %d%%
+
+                        Give:
+
+                        1. Progress Summary
+
+                        2. Motivation
+
+                        3. Next Recommendation
+
+                        Keep the answer under 150 words.
+                        """
+                        .formatted(
+                                dashboard.getTotalGoals(),
+                                dashboard.getCompletedGoals(),
+                                dashboard.getTotalTasks(),
+                                dashboard.getCompletedTasks(),
+                                dashboard.getPendingTasks(),
+                                dashboard.getOverallProgress()
+                        );
 
                 GeminiRequest request = createRequest(prompt);
 
