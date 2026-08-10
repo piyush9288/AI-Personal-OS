@@ -36,10 +36,9 @@ export default function Landing() {
         login(response.token, response.user);
         navigate('/app');
       } else {
-        // After register, show success message and switch to login
+        // Since email is temporarily bypassed, switch to login
         setIsLogin(true);
-        setError('');
-        alert('Registration successful! Please check your email to verify your account before logging in.');
+        setError('Registration successful! You can now log in.');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');

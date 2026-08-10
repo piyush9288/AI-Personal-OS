@@ -45,24 +45,23 @@ public class UserService {
         user.setPassword(
                 passwordEncoder.encode(request.getPassword())
         );
-        user.setVerified(false);
+        user.setVerified(true);
         user.setVerificationToken(java.util.UUID.randomUUID().toString());
 
         User savedUser = userRepository.save(user);
 
-        // Send verification email
-        try {
-            emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationToken());
-        } catch (Exception e) {
-            userRepository.delete(savedUser); // Rollback user creation
-            throw new RuntimeException("Email failed to send. Please check MAIL_USERNAME and MAIL_PASSWORD in Render: " + e.getMessage());
-        }
+        // Send verification email - COMMENTED OUT TEMPORARILY due to SMTP issues
+        // try {
+        //     emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationToken());
+        // } catch (Exception e) {
+        //     userRepository.delete(savedUser); // Rollback user creation
+        //     throw new RuntimeException("Email failed to send. Please check MAIL_USERNAME and MAIL_PASSWORD in Render: " + e.getMessage());
+        // }
 
         return savedUser;
     }
 
-        public LoginResponse login(LoginRequest request) {
-
+    public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
                         new InvalidCredentialsException(
@@ -76,9 +75,9 @@ public class UserService {
                     "Invalid email or password");
         }
 
-        if (!user.isVerified()) {
-            throw new RuntimeException("Please verify your email address before logging in.");
-        }
+        // if (!user.isVerified()) {
+        //     throw new RuntimeException("Please verify your email address before logging in.");
+        // }
 
         String token = jwtService.generateToken(user);
 
