@@ -11,9 +11,11 @@ export async function fetchApi<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getAuthToken();
+  const isAuthEndpoint = endpoint.startsWith('/auth/');
+  
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token && !isAuthEndpoint ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
 
@@ -25,15 +27,16 @@ export async function fetchApi<T>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    const errorData = data as ApiErrorResponse;
     if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/';
-      throw new Error('Session expired. Please log in again.');
+      throw new Error(`Auth Error (${response.status}): Your session has expired or is invalid. Please try logging in again.`);
     }
-    const errorData = data as ApiErrorResponse;
+    
     console.error("API Error Response:", errorData, "HTTP Status:", response.status);
-    throw new Error(errorData.message || 'An unexpected error occurred. Please make sure the backend is running and connected to the database.');
+    throw new Error(errorData.message || `Server Error (${response.status}): Could not complete the request.`);
   }
 
   const successData = data as ApiResponse<T>;
