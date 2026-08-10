@@ -1,0 +1,16 @@
+# Node
+node_modules/
+dist/
+.env
+
+# Java / Maven
+target/
+*.jar
+*.war
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.class
+.DS_Store

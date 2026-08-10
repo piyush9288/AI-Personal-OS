@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/api/client.ts","./src/components/protectedroute.tsx","./src/layouts/mainlayout.tsx","./src/pages/aicommandcenter.tsx","./src/pages/dashboard.tsx","./src/pages/goals.tsx","./src/pages/landing.tsx","./src/pages/tasks.tsx","./src/store/authcontext.tsx","./src/three/floatingcore.tsx","./src/types/index.ts"],"version":"6.0.3"}
