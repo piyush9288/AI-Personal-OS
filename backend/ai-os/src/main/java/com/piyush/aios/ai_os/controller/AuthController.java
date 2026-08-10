@@ -15,22 +15,27 @@ import org.springframework.http.ResponseEntity;
 
 import jakarta.validation.Valid;
 
+import com.piyush.aios.ai_os.security.JwtService;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     private final UserService userService;
+    private final JwtService jwtService;
 
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, JwtService jwtService) {
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<User>> register(
+    public ResponseEntity<ApiResponse<LoginResponse>> register(
             @Valid @RequestBody RegisterRequest request) {
-        User user = userService.register(request);
-        return ResponseEntity.status(201).body(ApiResponse.success("User registered successfully", user));
+        User savedUser = userService.register(request);
+        String token = jwtService.generateToken(savedUser);
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully", new LoginResponse(token, savedUser)));
     }
 
     @PostMapping("/login")
