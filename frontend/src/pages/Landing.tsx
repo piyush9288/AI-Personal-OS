@@ -36,9 +36,10 @@ export default function Landing() {
         login(response.token, response.user);
         navigate('/app');
       } else {
-        // After register, auto login or switch to login
+        // After register, show success message and switch to login
         setIsLogin(true);
-        setError('Registration successful! Please login.');
+        setError('');
+        alert('Registration successful! Please check your email to verify your account before logging in.');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');

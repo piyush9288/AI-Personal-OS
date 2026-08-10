@@ -17,14 +17,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     public UserService(UserRepository userRepository,
                    PasswordEncoder passwordEncoder,
-                   JwtService jwtService) {
+                   JwtService jwtService,
+                   EmailService emailService) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
 
 
@@ -42,8 +45,15 @@ public class UserService {
         user.setPassword(
                 passwordEncoder.encode(request.getPassword())
         );
+        user.setVerified(false);
+        user.setVerificationToken(java.util.UUID.randomUUID().toString());
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Send verification email
+        emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationToken());
+
+        return savedUser;
     }
 
         public LoginResponse login(LoginRequest request) {
@@ -59,6 +69,10 @@ public class UserService {
 
             throw new InvalidCredentialsException(
                     "Invalid email or password");
+        }
+
+        if (!user.isVerified()) {
+            throw new RuntimeException("Please verify your email address before logging in.");
         }
 
         String token = jwtService.generateToken(user);
@@ -91,5 +105,19 @@ public class UserService {
         }
         
         return userRepository.save(existingUser);
+    }
+
+    public boolean verifyEmail(String token) {
+        User user = userRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired verification token"));
+
+        if (user.isVerified()) {
+            return true; // Already verified
+        }
+
+        user.setVerified(true);
+        user.setVerificationToken(null);
+        userRepository.save(user);
+        return true;
     }
 }

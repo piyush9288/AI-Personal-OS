@@ -39,4 +39,18 @@ public class AuthController {
         LoginResponse response = userService.login(request);
         return ResponseEntity.ok(ApiResponse.success("Login successful", response));
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/verify")
+    public ResponseEntity<?> verifyEmail(@org.springframework.web.bind.annotation.RequestParam String token) {
+        userService.verifyEmail(token);
+        
+        // Return a simple HTML response that redirects to the frontend login
+        String html = "<html><body>" +
+                      "<h2>Email Verified Successfully!</h2>" +
+                      "<p>You can now log in to your account. Redirecting you to login page...</p>" +
+                      "<script>setTimeout(function() { window.location.href = 'https://ai-personal-os.vercel.app/'; }, 3000);</script>" +
+                      "</body></html>";
+                      
+        return ResponseEntity.ok().header("Content-Type", "text/html").body(html);
+    }
 }
