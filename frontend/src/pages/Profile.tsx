@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../store/AuthContext';
 import { fetchApi } from '../api/client';
-import { Camera, Save, User as UserIcon, BookOpen, Calendar, Mail, Upload } from 'lucide-react';
+import { Save, User as UserIcon, BookOpen, Calendar, Mail, Upload } from 'lucide-react';
 import { User } from '../types';
 
 export default function Profile() {
