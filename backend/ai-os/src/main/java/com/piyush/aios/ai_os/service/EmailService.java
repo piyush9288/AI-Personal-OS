@@ -12,7 +12,7 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     public void sendVerificationEmail(String toEmail, String token) {
-        String verificationUrl = "https://ai-personal-os-dv7c.onrender.com/api/auth/verify?token=" + token;
+        String verificationUrl = "https://ai-personal-os-dv7c.onrender.com/auth/verify?token=" + token;
         
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);

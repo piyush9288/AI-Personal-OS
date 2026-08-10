@@ -1,6 +1,6 @@
 import { ApiResponse, ApiErrorResponse } from '../types';
 
-const API_BASE = 'https://ai-personal-os-dv7c.onrender.com/api';
+const API_BASE = 'https://ai-personal-os-dv7c.onrender.com';
 
 function getAuthToken() {
   return localStorage.getItem('token');
