@@ -51,7 +51,12 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         // Send verification email
-        emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationToken());
+        try {
+            emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationToken());
+        } catch (Exception e) {
+            userRepository.delete(savedUser); // Rollback user creation
+            throw new RuntimeException("Email failed to send. Please check MAIL_USERNAME and MAIL_PASSWORD in Render: " + e.getMessage());
+        }
 
         return savedUser;
     }
