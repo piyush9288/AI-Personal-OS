@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import FloatingCore from '../three/FloatingCore';
 import { useAuth } from '../store/AuthContext';
 import { fetchApi } from '../api/client';
-import { Brain, Target, CheckSquare, Zap, ChevronRight, Sparkles, Shield, Rocket, Terminal } from 'lucide-react';
+import { Brain, Target, CheckSquare, Zap, ChevronRight, Sparkles, Shield, Rocket } from 'lucide-react';
+import TerminalBoot from '../components/TerminalBoot';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -13,14 +14,6 @@ export default function Landing() {
   const [isLogin, setIsLogin] = useState(true);
   const [isBooting, setIsBooting] = useState(true);
   const targetRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // OS Boot sequence timer
-    const timer = setTimeout(() => {
-      setIsBooting(false);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, []);
   
   const { scrollYProgress } = useScroll({
     target: targetRef,
@@ -357,64 +350,9 @@ export default function Landing() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#050505]"
+            className="fixed inset-0 z-[200]"
           >
-            <div className="relative z-10 flex flex-col items-center">
-              
-              {/* Elegant Logo / Spinner */}
-              <div className="relative w-20 h-20 mb-8 flex items-center justify-center">
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-                  className="absolute inset-0 border border-white/10 rounded-full"
-                />
-                <motion.div 
-                  animate={{ rotate: -360 }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                  className="absolute inset-1 border-t border-primary/60 rounded-full"
-                />
-                <motion.div 
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[0_0_20px_rgba(var(--color-primary),0.3)]"
-                >
-                  <Zap size={20} className="text-white" />
-                </motion.div>
-              </div>
-
-              {/* Minimalist Text */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-col items-center"
-              >
-                <span className="text-sm font-medium tracking-[0.3em] text-white/80 uppercase mb-8">
-                  System Initialization
-                </span>
-                
-                {/* Ultra-thin loading bar */}
-                <div className="w-64 h-[1px] bg-white/10 relative overflow-hidden mb-6">
-                  <motion.div 
-                    initial={{ width: "0%" }} 
-                    animate={{ width: "100%" }} 
-                    transition={{ duration: 2.2, ease: "easeInOut" }} 
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-accent shadow-[0_0_10px_rgba(var(--color-primary),0.5)]" 
-                  />
-                </div>
-
-                <div className="flex flex-col items-center gap-2">
-                  <motion.p 
-                    animate={{ opacity: [0.3, 0.7, 0.3] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                    className="text-[10px] text-white/40 font-mono tracking-widest uppercase"
-                  >
-                    Loading Secure Environment...
-                  </motion.p>
-                </div>
-              </motion.div>
-            </div>
+            <TerminalBoot onComplete={() => setIsBooting(false)} />
           </motion.div>
         )}
       </AnimatePresence>
