@@ -63,6 +63,7 @@ public class AIService {
         prompt.append("""
 
                 Summarize these goals in a friendly and motivating way.
+                Mention the total number of goals in your response.
                 """);
 
         GeminiRequest request = createRequest(prompt.toString());

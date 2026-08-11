@@ -3,10 +3,12 @@ import { fetchApi } from '../api/client';
 import { Goal } from '../types';
 import { motion } from 'framer-motion';
 import { Target, CheckCircle2, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Goals() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchApi<Goal[]>('/goals')
@@ -27,7 +29,10 @@ export default function Goals() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-white">Goals</h1>
-        <button className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors">
+        <button 
+          onClick={() => navigate('/app/ai')}
+          className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
+        >
           Create Goal
         </button>
       </div>

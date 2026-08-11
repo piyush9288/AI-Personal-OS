@@ -3,10 +3,12 @@ import { fetchApi } from '../api/client';
 import { Goal, Task } from '../types';
 import { motion } from 'framer-motion';
 import { CheckSquare, Clock, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -47,7 +49,10 @@ export default function Tasks() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-white">Tasks</h1>
-        <button className="px-6 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent/90 transition-colors">
+        <button 
+          onClick={() => navigate('/app/ai')}
+          className="px-6 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent/90 transition-colors"
+        >
           Create Task
         </button>
       </div>
