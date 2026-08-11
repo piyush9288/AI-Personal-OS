@@ -154,31 +154,31 @@ public class AIService {
     }
 
     private String callGemini(GeminiRequest request) {
+        try {
+            GeminiResponse response = webClient.post()
+                    .uri(apiUrl + "?key=" + apiKey)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(GeminiResponse.class)
+                    .block();
 
+            if (response == null
+                    || response.getCandidates() == null
+                    || response.getCandidates().isEmpty()) {
 
-        GeminiResponse response = webClient.post()
-                .uri(apiUrl + "?key=" + apiKey)
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(GeminiResponse.class)
-                .block();
+                    return "⚠️ Gemini returned an empty response.";
+            }
 
-        if (response == null
-                || response.getCandidates() == null
-                || response.getCandidates().isEmpty()) {
-
-                throw new RuntimeException(
-                        "Gemini returned an empty response."
-                );
+            return response.getCandidates()
+                    .get(0)
+                    .getContent()
+                    .getParts()
+                    .get(0)
+                    .getText();
+        } catch (Exception e) {
+            return "⚠️ It looks like the AI cannot be reached. Please check if your GEMINI_API_KEY is correctly set in your environment variables on Render.";
         }
-
-        return response.getCandidates()
-                .get(0)
-                .getContent()
-                .getParts()
-                .get(0)
-                .getText();
-        }
+    }
 
         public String generateSimpleResponse(String prompt) {
 

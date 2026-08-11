@@ -23,13 +23,16 @@ public class AIOrchestratorService {
     private final TaskService taskService;
     private final DashboardService dashboardService;
 
+    private final ChatService chatService;
+
     public AIOrchestratorService(
         AIService aiService,
         IntentDetector intentDetector,
         GoalService goalService, GoalParserService goalParserService,
         TaskParserService taskParserService,
         TaskService taskService,
-        DashboardService dashboardService) {
+        DashboardService dashboardService,
+        ChatService chatService) {
 
         this.aiService = aiService;
         this.intentDetector = intentDetector;
@@ -38,79 +41,65 @@ public class AIOrchestratorService {
         this.taskParserService = taskParserService;
         this.taskService = taskService;
         this.dashboardService = dashboardService;
+        this.chatService = chatService;
     }
 
     public String chat(String prompt) {
+        // Save the user message first
+        chatService.saveUserMessage(prompt);
 
         // TODO: Replace keyword-based IntentDetector with LLM-based intent detection.
-
         Intent intent = intentDetector.detectIntent(prompt);
+        String aiResponse = "";
 
         switch (intent) {
-
             case SHOW_GOALS:
-
                 List<Goal> goals = goalService.getAllGoals();
-
-                return aiService.generateGoalSummary(goals);
+                aiResponse = aiService.generateGoalSummary(goals);
+                break;
                 
             case SHOW_TASKS:
-                
                 List<Task> tasks = taskService.getPendingTasks();
-                
-                return aiService.generatePendingTaskSummary(tasks);
+                aiResponse = aiService.generatePendingTaskSummary(tasks);
+                break;
 
             case GENERAL:
-
+                // generateResponse saves internally, so we don't save twice
                 return aiService.generateResponse(prompt);
 
             case CREATE_GOAL:
-
-                CreateGoalRequest goalRequest =
-                        goalParserService.parse(prompt);
-
-                Goal goal =
-                        goalService.createGoal(goalRequest);
-
-                return """
+                CreateGoalRequest goalRequest = goalParserService.parse(prompt);
+                Goal goal = goalService.createGoal(goalRequest);
+                aiResponse = """
                         ✅ Goal created successfully.
 
                         Title: %s
-                        """
-                        .formatted(goal.getTitle());
+                        """.formatted(goal.getTitle());
+                break;
 
             case CREATE_TASK:
-
-                CreateTaskFromAIRequest taskRequest =
-                        taskParserService.parse(prompt);
-
-                Task task =
-                        taskService.createTaskFromAI(taskRequest);
-
-                return """
+                CreateTaskFromAIRequest taskRequest = taskParserService.parse(prompt);
+                Task task = taskService.createTaskFromAI(taskRequest);
+                aiResponse = """
                         ✅ Task created successfully.
 
                         Goal : %s
                         Task : %s
-                        """
-                        .formatted(
-                                taskRequest.getGoalTitle(),
-                                task.getTitle()
-                        );
+                        """.formatted(taskRequest.getGoalTitle(), task.getTitle());
+                break;
 
             case DASHBOARD:
-
-                DashboardResponse dashboard =
-                            dashboardService.getDashboard();
-
-                return aiService.generateDashboardSummary(
-                        dashboard
-                );
+                DashboardResponse dashboard = dashboardService.getDashboard();
+                aiResponse = aiService.generateDashboardSummary(dashboard);
+                break;
 
             default:
-
+                // generateResponse saves internally
                 return aiService.generateResponse(prompt);
         }
-
+        
+        // Save AI response
+        chatService.saveAIMessage(aiResponse);
+        return aiResponse;
     }
 }
