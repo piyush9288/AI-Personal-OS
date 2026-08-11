@@ -46,6 +46,12 @@ public class IntentDetector {
                 return Intent.SHOW_TASKS;
             }
 
+            if (text.contains("delete")
+                    || text.contains("remove")) {
+
+                return Intent.DELETE_TASK;
+            }
+
             if (text.contains("complete")
                     || text.contains("done")
                     || text.contains("finished")) {

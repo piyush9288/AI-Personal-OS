@@ -16,6 +16,8 @@ public enum Intent {
 
     SHOW_TASKS,
     
+    DELETE_TASK,
+    
     COMPLETE_TASK,
 
     DASHBOARD
