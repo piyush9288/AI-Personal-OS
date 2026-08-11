@@ -14,9 +14,14 @@ public class TaskParserService {
 
         String text = prompt.trim();
 
-        text = text.replaceFirst("(?i)create task", "").trim();
+        text = text.replaceFirst("(?i)create (my )?task(s)?", "").trim();
 
-        String[] parts = text.split("(?i)for goal");
+        String[] parts = text.split("(?i)\\s+(?:for|on|in)(?:\\s+this)?\\s+goal(?:s)?\\s+");
+
+        if (parts.length == 1) {
+            // Also try splitting on "for" or "on" if the word "goal" is omitted
+            parts = text.split("(?i)\\s+(?:for|on)\\s+");
+        }
 
         request.setTaskTitle(parts[0].trim());
 

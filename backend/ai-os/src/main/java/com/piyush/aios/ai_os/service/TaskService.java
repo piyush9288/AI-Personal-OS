@@ -191,4 +191,9 @@ public class TaskService {
                 TaskStatus.NOT_STARTED
         );
     }
+    
+    public List<Task> getAllUserTasks() {
+        User currentUser = currentUserService.getCurrentUser();
+        return taskRepository.findByUser(currentUser);
+    }
 }

@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import { fetchApi } from '../api/client';
 import { Goal, Task, TaskStatus } from '../types';
-import { motion } from 'framer-motion';
-import { CheckSquare, Clock, Trash2, PlayCircle, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckSquare, Clock, Trash2, PlayCircle, CheckCircle2, Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [selectedGoalId, setSelectedGoalId] = useState<number | ''>('');
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,14 +23,16 @@ export default function Tasks() {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const goals = await fetchApi<Goal[]>('/goals');
-      if (!goals || goals.length === 0) {
+      const fetchedGoals = await fetchApi<Goal[]>('/goals');
+      if (!fetchedGoals || fetchedGoals.length === 0) {
+        setGoals([]);
         setTasks([]);
         return;
       }
+      setGoals(fetchedGoals);
       
       let allTasks: Task[] = [];
-      for (const goal of goals) {
+      for (const goal of fetchedGoals) {
         const goalTasks = await fetchApi<Task[]>(`/goals/${goal.id}/tasks`);
         if (goalTasks) {
           allTasks = [...allTasks, ...goalTasks];
@@ -69,7 +77,28 @@ export default function Tasks() {
     }
   };
 
-  if (loading) {
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim() || selectedGoalId === '') return;
+    setSubmitting(true);
+    try {
+      await fetchApi(`/goals/${selectedGoalId}/tasks`, {
+        method: 'POST',
+        body: JSON.stringify({ title: newTitle, description: newDesc, priority: 'MEDIUM' })
+      });
+      setShowModal(false);
+      setNewTitle('');
+      setNewDesc('');
+      setSelectedGoalId('');
+      fetchTasks();
+    } catch (err) {
+      console.error("Failed to create task", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading && tasks.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
@@ -81,13 +110,103 @@ export default function Tasks() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-white">Tasks</h1>
-        <button 
-          onClick={() => navigate('/app/ai')}
-          className="px-6 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent/90 transition-colors"
-        >
-          Create Task
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => navigate('/app/ai')}
+            className="px-6 py-2 bg-white/5 text-white font-medium rounded-lg hover:bg-white/10 transition-colors"
+          >
+            Ask AI
+          </button>
+          <button 
+            onClick={() => setShowModal(true)}
+            className="px-6 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent/90 transition-colors flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Create Manually
+          </button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="glass-panel p-6 w-full max-w-md"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white">Create New Task</h2>
+                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+              
+              {goals.length === 0 ? (
+                <div className="text-center py-6 text-gray-300">
+                  <p className="mb-4">You need to create a goal first before creating tasks.</p>
+                  <button 
+                    onClick={() => navigate('/app/goals')}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+                  >
+                    Go to Goals
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleCreate} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Select Goal</label>
+                    <select
+                      value={selectedGoalId}
+                      onChange={e => setSelectedGoalId(Number(e.target.value))}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-accent text-white [&>option]:bg-gray-800"
+                      required
+                    >
+                      <option value="" disabled>-- Select a Goal --</option>
+                      {goals.map(g => (
+                        <option key={g.id} value={g.id}>{g.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Task Title</label>
+                    <input
+                      type="text"
+                      value={newTitle}
+                      onChange={e => setNewTitle(e.target.value)}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-accent text-white"
+                      placeholder="e.g., Read chapter 1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                    <textarea
+                      value={newDesc}
+                      onChange={e => setNewDesc(e.target.value)}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-accent text-white h-24 resize-none"
+                      placeholder="Optional details"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={submitting || !newTitle.trim() || selectedGoalId === ''}
+                    className="w-full py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50"
+                  >
+                    {submitting ? 'Creating...' : 'Save Task'}
+                  </button>
+                </form>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {tasks.length === 0 ? (
         <div className="glass-panel p-12 flex flex-col items-center justify-center text-center">

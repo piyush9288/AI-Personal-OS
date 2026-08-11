@@ -110,26 +110,20 @@ public class AIService {
         chatService.saveUserMessage(prompt);
         List<Chat> chats = chatService.getChatHistory();
 
-        List<ContentRequest> contents =
-                chats.stream()
-                        .map(chat -> {
-
-                        String role =
-                                chat.getRole() == ChatRole.USER
-                                        ? "user"
-                                        : "model";
-
-                        return new ContentRequest(
-                                role,
-                                List.of(
-                                        new PartRequest(
-                                                chat.getMessage()
-                                        )
-                                )
-                        );
-
-                        })
-                        .toList();
+        List<ContentRequest> contents = new java.util.ArrayList<>();
+        contents.add(new ContentRequest("user", List.of(new PartRequest(
+            "SYSTEM INSTRUCTION: You are AI Personal OS, an intelligent productivity assistant. You can understand any language. If the user asks for pictures, images, links, or PDFs, provide them using Markdown format (e.g., ![alt](url) for images). Actively teach the user concepts they struggle with, provide resources, and motivate them to complete their goals."
+        ))));
+        contents.add(new ContentRequest("model", List.of(new PartRequest("Understood. I am ready to help."))));
+        
+        contents.addAll(
+            chats.stream()
+                .map(chat -> {
+                    String role = chat.getRole() == ChatRole.USER ? "user" : "model";
+                    return new ContentRequest(role, List.of(new PartRequest(chat.getMessage())));
+                })
+                .toList()
+        );
 
         GeminiRequest request = new GeminiRequest(contents);
         String aiResponse = callGemini(request);

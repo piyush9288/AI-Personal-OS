@@ -46,6 +46,22 @@ public class IntentDetector {
                 return Intent.SHOW_TASKS;
             }
 
+            if (text.contains("complete")
+                    || text.contains("done")
+                    || text.contains("finished")) {
+
+                return Intent.COMPLETE_TASK;
+            }
+
+        }
+
+        if (text.contains("complete")
+                || text.contains("done")
+                || text.contains("finished")) {
+            // "I completed my task", etc. fallback
+            if (text.contains("task") || text.contains("it")) {
+                return Intent.COMPLETE_TASK;
+            }
         }
 
         if (text.contains("dashboard")

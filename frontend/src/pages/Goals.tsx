@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { fetchApi } from '../api/client';
 import { Goal } from '../types';
-import { motion } from 'framer-motion';
-import { Target, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Target, Trash2, Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Goals() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +37,26 @@ export default function Goals() {
     }
   };
 
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    setSubmitting(true);
+    try {
+      await fetchApi('/goals', {
+        method: 'POST',
+        body: JSON.stringify({ title: newTitle, description: newDesc })
+      });
+      setShowModal(false);
+      setNewTitle('');
+      setNewDesc('');
+      fetchGoals();
+    } catch (err) {
+      console.error("Failed to create goal", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading && goals.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -45,13 +69,76 @@ export default function Goals() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-white">Goals</h1>
-        <button 
-          onClick={() => navigate('/app/ai')}
-          className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          Create Goal
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => navigate('/app/ai')}
+            className="px-6 py-2 bg-white/5 text-white font-medium rounded-lg hover:bg-white/10 transition-colors"
+          >
+            Ask AI
+          </button>
+          <button 
+            onClick={() => setShowModal(true)}
+            className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Create Manually
+          </button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="glass-panel p-6 w-full max-w-md"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white">Create New Goal</h2>
+                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
+                  <input
+                    type="text"
+                    value={newTitle}
+                    onChange={e => setNewTitle(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-primary text-white"
+                    placeholder="e.g., Learn Java"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                  <textarea
+                    value={newDesc}
+                    onChange={e => setNewDesc(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-primary text-white h-24 resize-none"
+                    placeholder="Optional description"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={submitting || !newTitle.trim()}
+                  className="w-full py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {submitting ? 'Creating...' : 'Save Goal'}
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {goals.length === 0 ? (
         <div className="glass-panel p-12 flex flex-col items-center justify-center text-center">

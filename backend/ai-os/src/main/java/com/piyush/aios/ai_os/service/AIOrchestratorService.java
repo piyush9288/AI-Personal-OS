@@ -11,7 +11,10 @@ import com.piyush.aios.ai_os.dto.dashboard.DashboardResponse;
 import java.util.List;
 
 import com.piyush.aios.ai_os.entity.Goal;
+import com.piyush.aios.ai_os.entity.GoalStatus;
 import com.piyush.aios.ai_os.entity.Task;
+import com.piyush.aios.ai_os.entity.TaskStatus;
+import com.piyush.aios.ai_os.dto.UpdateTaskRequest;
 
 @Service
 public class AIOrchestratorService {
@@ -86,6 +89,40 @@ public class AIOrchestratorService {
                         Goal : %s
                         Task : %s
                         """.formatted(taskRequest.getGoalTitle(), task.getTitle());
+                break;
+                
+            case COMPLETE_TASK:
+                List<Task> allTasks = taskService.getAllUserTasks();
+                Task taskToComplete = null;
+                for (Task t : allTasks) {
+                    if (t.getStatus() != TaskStatus.COMPLETED && prompt.toLowerCase().contains(t.getTitle().toLowerCase())) {
+                        taskToComplete = t;
+                        break;
+                    }
+                }
+                
+                if (taskToComplete != null) {
+                    UpdateTaskRequest update = new UpdateTaskRequest();
+                    update.setTitle(taskToComplete.getTitle());
+                    update.setDescription(taskToComplete.getDescription());
+                    update.setDueDate(taskToComplete.getDueDate());
+                    update.setPriority(taskToComplete.getPriority());
+                    update.setStatus(TaskStatus.COMPLETED);
+                    
+                    Task updatedTask = taskService.updateTask(taskToComplete.getId(), update);
+                    
+                    // The updateTask method internally updates goal progress. Fetch goal to check progress.
+                    Goal updatedGoal = goalService.getGoalById(updatedTask.getGoal().getId());
+                    
+                    if (updatedGoal.getProgress() == 100) {
+                        aiResponse = "🎉 Congratulations! You have completed all tasks for the goal: " + updatedGoal.getTitle() + "!\nYou've achieved 100% completion! 🎊\nIf you'd like to delete this goal now, just type 'delete goal " + updatedGoal.getTitle() + "'. Otherwise, it will be automatically removed after 2 days.";
+                    } else {
+                        aiResponse = "✅ Task marked as completed: " + updatedTask.getTitle() + "\nYour goal '" + updatedGoal.getTitle() + "' is now at " + updatedGoal.getProgress() + "%!";
+                    }
+                } else {
+                    // Fallback if no task title matched
+                    aiResponse = aiService.generateResponse(prompt);
+                }
                 break;
 
             case DASHBOARD:
