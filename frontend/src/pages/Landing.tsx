@@ -347,6 +347,7 @@ export default function Landing() {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
       {/* Welcome Animation Modal */}
       <AnimatePresence>
         {showWelcome && (
