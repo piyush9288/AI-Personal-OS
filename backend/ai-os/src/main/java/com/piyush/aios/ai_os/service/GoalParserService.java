@@ -10,11 +10,12 @@ public class GoalParserService {
     public CreateGoalRequest parse(String prompt) {
 
         CreateGoalRequest request = new CreateGoalRequest();
+        String text = prompt.trim();
 
-        String text = prompt
-                .replace("create goal", "")
-                .replace("add goal", "")
-                .trim();
+        text = text.replaceFirst("(?i)create (my )?goal(s)?(\\.)?", "").trim();
+        text = text.replaceFirst("(?i)add (my )?goal(s)?(\\.)?", "").trim();
+        text = text.replaceFirst("(?i)my goal(s)? is", "").trim();
+        text = text.replaceFirst("^[:.\\-\\s]+", "").trim();
 
         request.setTitle(text);
 
