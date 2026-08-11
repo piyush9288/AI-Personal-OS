@@ -166,6 +166,28 @@ public class AIOrchestratorService {
                     }
                     break;
                     
+                case "COMPLETE_ALL_TASKS":
+                    try {
+                        List<Task> pendingTasks = taskService.getPendingTasks();
+                        if (pendingTasks.isEmpty()) {
+                            aiResponse = "🎉 You don't have any pending tasks to complete!";
+                        } else {
+                            for (Task t : pendingTasks) {
+                                UpdateTaskRequest update = new UpdateTaskRequest();
+                                update.setTitle(t.getTitle());
+                                update.setDescription(t.getDescription());
+                                update.setDueDate(t.getDueDate());
+                                update.setPriority(t.getPriority());
+                                update.setStatus(TaskStatus.COMPLETED);
+                                taskService.updateTask(t.getId(), update);
+                            }
+                            aiResponse = "🎉 Awesome! I have marked ALL your pending tasks (" + pendingTasks.size() + ") as completed. Excellent work!";
+                        }
+                    } catch (Exception e) {
+                        aiResponse = "⚠️ Could not complete all tasks. " + e.getMessage();
+                    }
+                    break;
+                    
                 case "COMPLETE_TASK":
                     try {
                         List<Task> allTasks = taskService.getAllUserTasks();

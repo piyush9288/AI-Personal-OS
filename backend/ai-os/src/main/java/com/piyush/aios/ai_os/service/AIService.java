@@ -257,7 +257,8 @@ public class AIService {
                 - CREATE_TASK: The user wants to create a task. Extract 'goalTitle' and 'taskTitle'.
                 - AUTO_GENERATE_TASKS: The user wants you to auto-generate tasks for a goal. Extract 'goalTitle'.
                 - START_TUTORING: The user wants your help to complete tasks step-by-step or learn. Extract 'goalTitle' if available.
-                - COMPLETE_TASK: The user wants to mark a task as done. Extract 'taskTitle'.
+                - COMPLETE_TASK: The user wants to mark a single task as done. Extract 'taskTitle'.
+                - COMPLETE_ALL_TASKS: The user wants to mark ALL their tasks as done.
                 - DELETE_TASK: The user wants to delete a task. Extract 'taskTitle'.
                 - DELETE_GOAL: The user wants to delete a goal. Extract 'title'.
                 - SHOW_GOALS: The user wants to see their goals.
