@@ -165,13 +165,12 @@ public class AIService {
     private String callGemini(GeminiRequest request) {
         String[] fallbackModels = {
             apiUrl,
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent"
         };
         
         Exception lastException = null;
+        boolean rateLimitHit = false;
 
         for (String currentUrl : fallbackModels) {
             try {
@@ -201,7 +200,12 @@ public class AIService {
                         .getText();
             } catch (org.springframework.web.reactive.function.client.WebClientResponseException e) {
                 System.err.println("Gemini API Error (" + e.getStatusCode() + ") for URL " + currentUrl + ": " + e.getMessage());
-                lastException = e;
+                if (e.getStatusCode().value() == 429) {
+                    rateLimitHit = true;
+                    lastException = e; // prioritize 429
+                } else if (!rateLimitHit) {
+                    lastException = e;
+                }
                 // Continue to the next fallback model
             } catch (Exception e) {
                 System.err.println("Gemini API Error for URL " + currentUrl + ": " + e.getMessage());
@@ -210,7 +214,11 @@ public class AIService {
             }
         }
         
-        return "⚠️ It looks like the AI cannot be reached. All fallback models returned 404 Not Found. Error: " + lastException.getMessage() + ". Please check if the Generative Language API is enabled for your project, or verify your region's access.";
+        if (rateLimitHit) {
+            return "⚠️ Gemini API Rate Limit Exceeded (429 Too Many Requests). The free tier resets every minute for short bursts, and daily at midnight Pacific Time for large quotas. Please wait a moment and try again.";
+        }
+        
+        return "⚠️ It looks like the AI cannot be reached. All fallback models failed. Error: " + (lastException != null ? lastException.getMessage() : "Unknown") + ". Please check if the Generative Language API is enabled for your project, or verify your region's access.";
     }
 
         public String generateSimpleResponse(String prompt) {
