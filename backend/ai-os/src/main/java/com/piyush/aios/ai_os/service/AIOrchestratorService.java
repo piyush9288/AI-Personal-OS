@@ -53,6 +53,12 @@ public class AIOrchestratorService {
                 List<Goal> goals = goalService.getAllGoals();
 
                 return aiService.generateGoalSummary(goals);
+                
+            case SHOW_TASKS:
+                
+                List<Task> tasks = taskService.getPendingTasks();
+                
+                return aiService.generatePendingTaskSummary(tasks);
 
             case GENERAL:
 
