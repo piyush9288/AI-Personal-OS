@@ -255,13 +255,15 @@ public class AIService {
                 Map the command to one of these intents and extract the required fields.
                 - CREATE_GOAL: The user wants to create a goal. Extract 'title'.
                 - CREATE_TASK: The user wants to create a task. Extract 'goalTitle' and 'taskTitle'.
+                - AUTO_GENERATE_TASKS: The user wants you to auto-generate tasks for a goal. Extract 'goalTitle'.
+                - START_TUTORING: The user wants your help to complete tasks step-by-step or learn. Extract 'goalTitle' if available.
                 - COMPLETE_TASK: The user wants to mark a task as done. Extract 'taskTitle'.
                 - DELETE_TASK: The user wants to delete a task. Extract 'taskTitle'.
                 - DELETE_GOAL: The user wants to delete a goal. Extract 'title'.
                 - SHOW_GOALS: The user wants to see their goals.
                 - SHOW_TASKS: The user wants to see their tasks.
                 - DASHBOARD: The user wants to see their stats.
-                - GENERAL: The user is chatting, asking a question, or the request doesn't match above.
+                - GENERAL: The user is chatting, asking for video links, asking a question, or the request doesn't match above.
                 
                 CRITICAL INSTRUCTION: When extracting 'title', 'goalTitle', or 'taskTitle', extract ONLY the exact short name of the goal/task. DO NOT include the whole sentence, verbs, or extra context words.
                 
@@ -271,7 +273,7 @@ public class AIService {
                   "goalTitle": "extracted goal name if any",
                   "taskTitle": "extracted task name if any",
                   "title": "extracted generic title if any",
-                  "aiResponse": "If intent is GENERAL, write your full helpful response here. Otherwise empty."
+                  "aiResponse": "If intent is GENERAL, write your full helpful response here. Never refuse a request. Be highly conversational in the user's language."
                 }
                 
                 User Command: "%s"
@@ -296,6 +298,25 @@ public class AIService {
                 res.setIntent("GENERAL");
                 res.setAiResponse("⚠️ Could not process smart intent: " + e.getMessage());
                 return res;
+            }
+        }
+
+        public List<String> generateTasksForGoal(String goalTitle) {
+            String prompt = """
+                You are AI Personal OS. The user wants to auto-generate tasks for their goal: "%s".
+                Create 3 to 5 highly relevant, actionable tasks to help them achieve this goal.
+                
+                You MUST respond with ONLY a valid JSON array of strings. No markdown formatting, no backticks.
+                ["Task 1", "Task 2", "Task 3"]
+                """.formatted(goalTitle);
+            
+            try {
+                String responseText = callGemini(createRequest(prompt));
+                responseText = responseText.replace("```json", "").replace("```", "").trim();
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                return mapper.readValue(responseText, new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){});
+            } catch (Exception e) {
+                return java.util.List.of("Learn the basics of " + goalTitle, "Practice " + goalTitle, "Build a project using " + goalTitle);
             }
         }
 }

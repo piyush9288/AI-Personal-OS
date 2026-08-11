@@ -98,11 +98,52 @@ public class AIOrchestratorService {
                             CreateGoalRequest goalReq = new CreateGoalRequest();
                             goalReq.setTitle(smartResponse.getTitle());
                             Goal goal = goalService.createGoal(goalReq);
-                            aiResponse = "✅ Goal created successfully.\n\nTitle: " + goal.getTitle();
+                            aiResponse = "✅ Goal created successfully: **" + goal.getTitle() + "**\n\nWould you like me to auto-generate a smart task list for this goal, or will you add tasks manually? (Say: 'Auto-generate tasks for " + goal.getTitle() + "')";
                         }
                     } catch (Exception e) {
                         aiResponse = "⚠️ Could not create goal. Please try again.";
                     }
+                    break;
+                    
+                case "AUTO_GENERATE_TASKS":
+                    try {
+                        if (smartResponse.getGoalTitle() == null || smartResponse.getGoalTitle().isEmpty()) {
+                            aiResponse = "⚠️ Please specify which goal you want me to generate tasks for.";
+                        } else {
+                            // Find the goal
+                            List<Goal> allGoals = goalService.getAllGoals();
+                            Goal targetGoal = null;
+                            for (Goal g : allGoals) {
+                                if (g.getTitle().toLowerCase().contains(smartResponse.getGoalTitle().toLowerCase()) ||
+                                    smartResponse.getGoalTitle().toLowerCase().contains(g.getTitle().toLowerCase())) {
+                                    targetGoal = g;
+                                    break;
+                                }
+                            }
+                            
+                            if (targetGoal != null) {
+                                List<String> generatedTasks = aiService.generateTasksForGoal(targetGoal.getTitle());
+                                StringBuilder sb = new StringBuilder("✅ I have auto-generated the following tasks for **" + targetGoal.getTitle() + "**:\n\n");
+                                for (String t : generatedTasks) {
+                                    CreateTaskFromAIRequest tr = new CreateTaskFromAIRequest();
+                                    tr.setGoalTitle(targetGoal.getTitle());
+                                    tr.setTaskTitle(t);
+                                    taskService.createTaskFromAI(tr);
+                                    sb.append("- ").append(t).append("\n");
+                                }
+                                sb.append("\nDo you want to complete them yourself, or should I help you learn and complete them step-by-step? (Say: 'Help me complete my tasks')");
+                                aiResponse = sb.toString();
+                            } else {
+                                aiResponse = "⚠️ Could not find a goal matching: " + smartResponse.getGoalTitle();
+                            }
+                        }
+                    } catch (Exception e) {
+                        aiResponse = "⚠️ Error generating tasks: " + e.getMessage();
+                    }
+                    break;
+                    
+                case "START_TUTORING":
+                    aiResponse = "Great! I will help you complete your tasks step-by-step. Let's start with your pending tasks. Whenever you finish a step or task, just tell me (e.g., 'mark task X as done'), and I'll track your progress!\n\nWhat do you want to work on first?";
                     break;
     
                 case "CREATE_TASK":
