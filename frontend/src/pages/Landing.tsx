@@ -44,11 +44,12 @@ export default function Landing() {
       });
 
       if (isLogin) {
+        setShowAuth(false);
         setShowWelcome(true);
-        login(response.token, response.user);
         
-        // Wait for 3.5 seconds to show the animation, then redirect
+        // Let the animation play, then login and navigate
         setTimeout(() => {
+          login(response.token, response.user);
           navigate('/app');
         }, 3500);
       } else {
