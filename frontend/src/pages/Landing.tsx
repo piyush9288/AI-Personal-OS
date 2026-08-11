@@ -5,6 +5,7 @@ import FloatingCore from '../three/FloatingCore';
 import { useAuth } from '../store/AuthContext';
 import { fetchApi } from '../api/client';
 import { Brain, Target, CheckSquare, Zap, ChevronRight, Sparkles, Shield, Rocket } from 'lucide-react';
+import HandshakeAnimation from '../components/HandshakeAnimation';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -362,14 +363,10 @@ export default function Landing() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3, duration: 1, ease: "easeOut" }}
-              className="relative w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(var(--color-primary),0.3)] border border-white/10"
+              className="relative w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(var(--color-primary),0.3)] border border-white/10 bg-black/80 flex items-center justify-center"
             >
-              <img 
-                src="/handshake.jpg" 
-                alt="AI Handshake" 
-                className="w-full h-full object-cover opacity-80"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <HandshakeAnimation />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
               
               <motion.div 
                 initial={{ y: 50, opacity: 0 }}
