@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { fetchApi } from '../api/client';
-import { Goal, Task } from '../types';
+import { Goal, Task, TaskStatus } from '../types';
 import { motion } from 'framer-motion';
-import { CheckSquare, Clock, AlertCircle } from 'lucide-react';
+import { CheckSquare, Clock, Trash2, PlayCircle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Tasks() {
@@ -11,31 +11,63 @@ export default function Tasks() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const goals = await fetchApi<Goal[]>('/goals');
-        if (!goals || goals.length === 0) {
-          setTasks([]);
-          return;
-        }
-        
-        let allTasks: Task[] = [];
-        for (const goal of goals) {
-          const goalTasks = await fetchApi<Task[]>(`/goals/${goal.id}/tasks`);
-          if (goalTasks) {
-            allTasks = [...allTasks, ...goalTasks];
-          }
-        }
-        setTasks(allTasks);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchTasks();
   }, []);
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    try {
+      const goals = await fetchApi<Goal[]>('/goals');
+      if (!goals || goals.length === 0) {
+        setTasks([]);
+        return;
+      }
+      
+      let allTasks: Task[] = [];
+      for (const goal of goals) {
+        const goalTasks = await fetchApi<Task[]>(`/goals/${goal.id}/tasks`);
+        if (goalTasks) {
+          allTasks = [...allTasks, ...goalTasks];
+        }
+      }
+      setTasks(allTasks);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+    try {
+      await fetchApi(`/tasks/${id}`, { method: 'DELETE' });
+      fetchTasks();
+    } catch (err) {
+      console.error("Failed to delete task", err);
+    }
+  };
+
+  const toggleStatus = async (task: Task) => {
+    try {
+      const newStatus: TaskStatus = task.status === 'COMPLETED' ? 'NOT_STARTED' : 
+                                    task.status === 'NOT_STARTED' ? 'IN_PROGRESS' : 'COMPLETED';
+      
+      await fetchApi(`/tasks/${task.id}`, { 
+        method: 'PUT',
+        body: JSON.stringify({
+          title: task.title,
+          description: task.description,
+          dueDate: task.dueDate,
+          priority: task.priority,
+          status: newStatus
+        })
+      });
+      fetchTasks();
+    } catch (err) {
+      console.error("Failed to update task", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -93,6 +125,24 @@ export default function Tasks() {
                   }`}>
                     {task.status.replace('_', ' ')}
                   </span>
+                  
+                  <button 
+                    onClick={() => toggleStatus(task)}
+                    className="p-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors"
+                    title="Change Status"
+                  >
+                    {task.status === 'COMPLETED' ? <Clock size={16} /> : 
+                     task.status === 'IN_PROGRESS' ? <CheckCircle2 size={16} className="text-green-400" /> : 
+                     <PlayCircle size={16} className="text-accent" />}
+                  </button>
+
+                  <button 
+                    onClick={() => handleDelete(task.id)}
+                    className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                    title="Delete Task"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">{task.title}</h3>

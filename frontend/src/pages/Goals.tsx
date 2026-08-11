@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchApi } from '../api/client';
 import { Goal } from '../types';
 import { motion } from 'framer-motion';
-import { Target, CheckCircle2, Clock } from 'lucide-react';
+import { Target, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Goals() {
@@ -11,13 +11,29 @@ export default function Goals() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    fetchGoals();
+  }, []);
+
+  const fetchGoals = () => {
+    setLoading(true);
     fetchApi<Goal[]>('/goals')
       .then((data) => setGoals(data || []))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, []);
+  };
 
-  if (loading) {
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this goal? All its tasks will also be deleted.")) return;
+    
+    try {
+      await fetchApi(`/goals/${id}`, { method: 'DELETE' });
+      fetchGoals();
+    } catch (err) {
+      console.error("Failed to delete goal", err);
+    }
+  };
+
+  if (loading && goals.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -58,14 +74,24 @@ export default function Goals() {
                 <div className="p-3 bg-primary/20 rounded-xl text-primary">
                   <Target size={24} />
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  goal.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400' :
-                  goal.status === 'IN_PROGRESS' ? 'bg-orange-500/20 text-orange-400' :
-                  'bg-gray-500/20 text-gray-400'
-                }`}>
-                  {goal.status.replace('_', ' ')}
-                </span>
+                <div className="flex gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    goal.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400' :
+                    goal.status === 'IN_PROGRESS' ? 'bg-orange-500/20 text-orange-400' :
+                    'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {goal.status.replace('_', ' ')}
+                  </span>
+                  <button 
+                    onClick={() => handleDelete(goal.id)}
+                    className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                    title="Delete Goal"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
+
               <h3 className="text-xl font-semibold text-white mb-2">{goal.title}</h3>
               <p className="text-textMuted text-sm mb-6 flex-grow">{goal.description}</p>
               
