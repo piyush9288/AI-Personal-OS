@@ -165,7 +165,7 @@ public class AIOrchestratorService {
                             }
                         } else {
                             // Fallback if no task title matched
-                            aiResponse = aiService.generateResponse(prompt);
+                            aiResponse = aiService.generateResponse(chatRequest);
                         }
                     } catch (Exception e) {
                         aiResponse = "⚠️ Could not complete task. " + e.getMessage();
@@ -200,7 +200,7 @@ public class AIOrchestratorService {
     
                 default:
                     // generateResponse saves internally
-                    return aiService.generateResponse(prompt);
+                    return aiService.generateResponse(chatRequest);
             }
             
             // Save AI response
