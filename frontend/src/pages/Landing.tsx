@@ -5,14 +5,12 @@ import FloatingCore from '../three/FloatingCore';
 import { useAuth } from '../store/AuthContext';
 import { fetchApi } from '../api/client';
 import { Brain, Target, CheckSquare, Zap, ChevronRight, Sparkles, Shield, Rocket } from 'lucide-react';
-import TerminalBoot from '../components/TerminalBoot';
 
 export default function Landing() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
-  const [isBooting, setIsBooting] = useState(true);
   const targetRef = useRef<HTMLDivElement>(null);
   
   const { scrollYProgress } = useScroll({
@@ -340,19 +338,6 @@ export default function Landing() {
                 </button>
               </p>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* Boot Sequence Overlay */}
-      <AnimatePresence>
-        {isBooting && (
-          <motion.div 
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
-            className="fixed inset-0 z-[200]"
-          >
-            <TerminalBoot onComplete={() => setIsBooting(false)} />
           </motion.div>
         )}
       </AnimatePresence>
