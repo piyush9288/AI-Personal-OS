@@ -50,25 +50,24 @@ public class AIOrchestratorService {
     public String chat(com.piyush.aios.ai_os.dto.ChatRequest chatRequest) {
         try {
             String prompt = chatRequest.getPrompt();
-            // Save the user message first
             chatService.saveUserMessage(prompt);
     
-            // TODO: Replace keyword-based IntentDetector with LLM-based intent detection.
-            Intent intent = intentDetector.detectIntent(prompt);
+            // Use the LLM for smart intent detection!
+            com.piyush.aios.ai_os.dto.SmartIntentResponse smartResponse = aiService.detectSmartIntent(prompt);
             String aiResponse = "";
     
-            switch (intent) {
-                case SHOW_GOALS:
+            switch (smartResponse.getIntent()) {
+                case "SHOW_GOALS":
                     List<Goal> goals = goalService.getAllGoals();
                     aiResponse = aiService.generateGoalSummary(goals);
                     break;
                     
-                case DELETE_GOAL:
+                case "DELETE_GOAL":
                     try {
                         List<Goal> allGoals = goalService.getAllGoals();
                         Goal goalToDelete = null;
                         for (Goal g : allGoals) {
-                            if (prompt.toLowerCase().contains(g.getTitle().toLowerCase())) {
+                            if (smartResponse.getTitle() != null && g.getTitle().toLowerCase().contains(smartResponse.getTitle().toLowerCase())) {
                                 goalToDelete = g;
                                 break;
                             }
@@ -84,62 +83,52 @@ public class AIOrchestratorService {
                     }
                     break;
                     
-                case SHOW_TASKS:
+                case "SHOW_TASKS":
                     List<Task> tasks = taskService.getPendingTasks();
                     aiResponse = aiService.generatePendingTaskSummary(tasks);
                     break;
     
-                case GENERAL:
-                    // generateResponse saves internally, so we don't save twice
-                    return aiService.generateResponse(chatRequest);
-    
-                case CREATE_GOAL:
+                case "CREATE_GOAL":
                     try {
-                        CreateGoalRequest goalRequest = goalParserService.parse(prompt);
-                        if (goalRequest.getTitle() == null || goalRequest.getTitle().isEmpty()) {
-                            aiResponse = "⚠️ Please specify a title for the goal. (e.g., 'create goal Learn Java')";
+                        if (smartResponse.getTitle() == null || smartResponse.getTitle().isEmpty()) {
+                            aiResponse = "⚠️ Please specify a title for the goal.";
                         } else {
-                            Goal goal = goalService.createGoal(goalRequest);
-                            aiResponse = """
-                                    ✅ Goal created successfully.
-        
-                                    Title: %s
-                                    """.formatted(goal.getTitle());
+                            CreateGoalRequest goalReq = new CreateGoalRequest();
+                            goalReq.setTitle(smartResponse.getTitle());
+                            Goal goal = goalService.createGoal(goalReq);
+                            aiResponse = "✅ Goal created successfully.\n\nTitle: " + goal.getTitle();
                         }
                     } catch (Exception e) {
-                        aiResponse = "⚠️ Could not create goal. Please try again with a clearer format.";
+                        aiResponse = "⚠️ Could not create goal. Please try again.";
                     }
                     break;
     
-                case CREATE_TASK:
+                case "CREATE_TASK":
                     try {
-                        CreateTaskFromAIRequest taskRequest = taskParserService.parse(prompt);
-                        if (taskRequest.getTaskTitle() == null || taskRequest.getTaskTitle().isEmpty()) {
-                            aiResponse = "⚠️ Please specify a task title. (e.g., 'create task Read Chapter 1 for goal Study')";
-                        } else if (taskRequest.getGoalTitle() == null || taskRequest.getGoalTitle().isEmpty()) {
-                            aiResponse = "⚠️ Please specify which goal this task belongs to. (e.g., 'for goal Study')";
+                        if (smartResponse.getTaskTitle() == null || smartResponse.getTaskTitle().isEmpty()) {
+                            aiResponse = "⚠️ Please specify a task title.";
+                        } else if (smartResponse.getGoalTitle() == null || smartResponse.getGoalTitle().isEmpty()) {
+                            aiResponse = "⚠️ Please specify which goal this task belongs to.";
                         } else {
-                            Task task = taskService.createTaskFromAI(taskRequest);
-                            aiResponse = """
-                                    ✅ Task created successfully.
-        
-                                    Goal : %s
-                                    Task : %s
-                                    """.formatted(taskRequest.getGoalTitle(), task.getTitle());
+                            CreateTaskFromAIRequest taskReq = new CreateTaskFromAIRequest();
+                            taskReq.setGoalTitle(smartResponse.getGoalTitle());
+                            taskReq.setTaskTitle(smartResponse.getTaskTitle());
+                            Task task = taskService.createTaskFromAI(taskReq);
+                            aiResponse = "✅ Task created successfully.\n\nGoal: " + smartResponse.getGoalTitle() + "\nTask: " + task.getTitle();
                         }
                     } catch (com.piyush.aios.ai_os.exception.GoalNotFoundException e) {
                         aiResponse = "⚠️ " + e.getMessage() + ". Please make sure the goal exists.";
                     } catch (Exception e) {
-                        aiResponse = "⚠️ Could not parse your task. Please try again with a clearer format like 'create task [task] for goal [goal]'.";
+                        aiResponse = "⚠️ Could not parse your task. Please try again.";
                     }
                     break;
                     
-                case COMPLETE_TASK:
+                case "COMPLETE_TASK":
                     try {
                         List<Task> allTasks = taskService.getAllUserTasks();
                         Task taskToComplete = null;
                         for (Task t : allTasks) {
-                            if (t.getStatus() != TaskStatus.COMPLETED && prompt.toLowerCase().contains(t.getTitle().toLowerCase())) {
+                            if (t.getStatus() != TaskStatus.COMPLETED && smartResponse.getTaskTitle() != null && t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase())) {
                                 taskToComplete = t;
                                 break;
                             }
@@ -154,8 +143,6 @@ public class AIOrchestratorService {
                             update.setStatus(TaskStatus.COMPLETED);
                             
                             Task updatedTask = taskService.updateTask(taskToComplete.getId(), update);
-                            
-                            // The updateTask method internally updates goal progress. Fetch goal to check progress.
                             Goal updatedGoal = goalService.getGoalById(updatedTask.getGoal().getId());
                             
                             if (updatedGoal.getProgress() == 100) {
@@ -165,19 +152,19 @@ public class AIOrchestratorService {
                             }
                         } else {
                             // Fallback if no task title matched
-                            aiResponse = aiService.generateResponse(chatRequest);
+                            aiResponse = "⚠️ Could not find an incomplete task matching: " + smartResponse.getTaskTitle();
                         }
                     } catch (Exception e) {
                         aiResponse = "⚠️ Could not complete task. " + e.getMessage();
                     }
                     break;
                     
-                case DELETE_TASK:
+                case "DELETE_TASK":
                     try {
                         List<Task> allTasks = taskService.getAllUserTasks();
                         Task taskToDelete = null;
                         for (Task t : allTasks) {
-                            if (prompt.toLowerCase().contains(t.getTitle().toLowerCase())) {
+                            if (smartResponse.getTaskTitle() != null && t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase())) {
                                 taskToDelete = t;
                                 break;
                             }
@@ -193,14 +180,19 @@ public class AIOrchestratorService {
                     }
                     break;
     
-                case DASHBOARD:
+                case "DASHBOARD":
                     DashboardResponse dashboard = dashboardService.getDashboard();
                     aiResponse = aiService.generateDashboardSummary(dashboard);
                     break;
     
+                case "GENERAL":
                 default:
-                    // generateResponse saves internally
-                    return aiService.generateResponse(chatRequest);
+                    if (smartResponse.getAiResponse() != null && !smartResponse.getAiResponse().isEmpty()) {
+                        aiResponse = smartResponse.getAiResponse();
+                    } else {
+                        return aiService.generateResponse(chatRequest);
+                    }
+                    break;
             }
             
             // Save AI response

@@ -222,32 +222,19 @@ public class AIService {
         }
 
         public String generateDashboardSummary(DashboardResponse dashboard) {
-
                 String prompt = """
                         You are AI Personal OS.
-
                         Analyze the dashboard statistics.
-
                         Total Goals : %d
-
                         Completed Goals : %d
-
                         Total Tasks : %d
-
                         Completed Tasks : %d
-
                         Pending Tasks : %d
-
                         Overall Progress : %d%%
-
                         Give:
-
                         1. Progress Summary
-
                         2. Motivation
-
                         3. Next Recommendation
-
                         Keep the answer under 150 words.
                         """
                         .formatted(
@@ -258,10 +245,55 @@ public class AIService {
                                 dashboard.getPendingTasks(),
                                 dashboard.getOverallProgress()
                         );
-
                 GeminiRequest request = createRequest(prompt);
-
                 return callGemini(request);
+        }
 
+        public com.piyush.aios.ai_os.dto.SmartIntentResponse detectSmartIntent(String userMessage) {
+            String prompt = """
+                You are the core intelligence of AI Personal OS. The user will give you a command in English, Hindi, or Hinglish.
+                Map the command to one of these intents and extract the required fields.
+                - CREATE_GOAL: The user wants to create a goal. Extract 'title'.
+                - CREATE_TASK: The user wants to create a task. Extract 'goalTitle' and 'taskTitle'.
+                - COMPLETE_TASK: The user wants to mark a task as done. Extract 'taskTitle'.
+                - DELETE_TASK: The user wants to delete a task. Extract 'taskTitle'.
+                - DELETE_GOAL: The user wants to delete a goal. Extract 'title'.
+                - SHOW_GOALS: The user wants to see their goals.
+                - SHOW_TASKS: The user wants to see their tasks.
+                - DASHBOARD: The user wants to see their stats.
+                - GENERAL: The user is chatting, asking a question, or the request doesn't match above.
+                
+                You MUST respond with ONLY a valid JSON object. No markdown formatting, no backticks.
+                {
+                  "intent": "CREATE_TASK",
+                  "goalTitle": "extracted goal name if any",
+                  "taskTitle": "extracted task name if any",
+                  "title": "extracted generic title if any",
+                  "aiResponse": "If intent is GENERAL, write your full helpful response here. Otherwise empty."
+                }
+                
+                User Command: "%s"
+                """.formatted(userMessage);
+                
+            try {
+                String responseText = callGemini(createRequest(prompt));
+                if (responseText.startsWith("⚠️")) {
+                    com.piyush.aios.ai_os.dto.SmartIntentResponse res = new com.piyush.aios.ai_os.dto.SmartIntentResponse();
+                    res.setIntent("GENERAL");
+                    res.setAiResponse(responseText);
+                    return res;
+                }
+                
+                // Clean markdown if Gemini accidentally included it
+                responseText = responseText.replace("```json", "").replace("```", "").trim();
+                
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                return mapper.readValue(responseText, com.piyush.aios.ai_os.dto.SmartIntentResponse.class);
+            } catch (Exception e) {
+                com.piyush.aios.ai_os.dto.SmartIntentResponse res = new com.piyush.aios.ai_os.dto.SmartIntentResponse();
+                res.setIntent("GENERAL");
+                res.setAiResponse("⚠️ Could not process smart intent: " + e.getMessage());
+                return res;
+            }
         }
 }
