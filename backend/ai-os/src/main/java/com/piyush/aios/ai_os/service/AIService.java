@@ -172,7 +172,7 @@ public class AIService {
         } catch (Exception e) {
             System.err.println("Gemini API Error: " + e.getMessage());
             e.printStackTrace();
-            return "⚠️ It looks like the AI cannot be reached. Please check if your GEMINI_API_KEY is correctly set in your environment variables on Render.";
+            return "⚠️ It looks like the AI cannot be reached. Error: " + e.getMessage() + ". Please check if your GEMINI_API_KEY is correctly set in your environment variables on Render.";
         }
     }
 
