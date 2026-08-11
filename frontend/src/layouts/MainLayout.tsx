@@ -76,29 +76,37 @@ export default function MainLayout() {
               <NavLink 
                 to="/app/profile"
                 className={({ isActive }) => 
-                  `flex items-center space-x-3 mb-4 p-2 -mx-2 rounded-xl transition-all cursor-pointer ${
-                    isActive ? 'bg-white/10 border border-white/10' : 'hover:bg-white/5'
+                  `flex items-center space-x-4 mb-4 p-3 rounded-2xl transition-all duration-300 cursor-pointer relative overflow-hidden group ${
+                    isActive ? 'bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-white/20' : 'bg-black/20 hover:bg-white/5 border border-white/5'
                   }`
                 }
               >
-                {user?.profilePictureUrl ? (
-                  <img src={user.profilePictureUrl} alt="Profile" className="w-10 h-10 rounded-full object-cover border border-secondary" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-secondary/20 border border-secondary flex items-center justify-center text-secondary font-bold uppercase shrink-0">
-                    {user?.name?.charAt(0) || 'U'}
-                  </div>
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent -z-10" />
+                    )}
+                    {user?.profilePictureUrl ? (
+                      <img src={user.profilePictureUrl} alt="Profile" className={`w-11 h-11 rounded-full object-cover border-2 transition-all ${isActive ? 'border-primary shadow-[0_0_10px_rgba(var(--color-primary),0.5)]' : 'border-white/10 group-hover:border-primary/50'}`} />
+                    ) : (
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold uppercase shrink-0 transition-all border-2 ${isActive ? 'bg-primary/20 text-primary border-primary shadow-[0_0_10px_rgba(var(--color-primary),0.5)]' : 'bg-white/5 text-textMuted border-white/10 group-hover:border-primary/50 group-hover:text-primary'}`}>
+                        {user?.name?.charAt(0) || 'U'}
+                      </div>
+                    )}
+                    <div className="overflow-hidden flex-1">
+                      <p className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>{user?.name}</p>
+                      <p className="text-[11px] text-textMuted truncate font-medium">OS Admin</p>
+                    </div>
+                  </>
                 )}
-                <div className="overflow-hidden">
-                  <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-                  <p className="text-xs text-textMuted truncate">{user?.email}</p>
-                </div>
               </NavLink>
+              
               <button 
                 onClick={logout}
-                className="w-full flex items-center justify-center space-x-2 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+                className="w-full flex items-center justify-center space-x-2 py-3.5 rounded-2xl bg-black/20 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all duration-300 font-bold tracking-wide group"
               >
-                <LogOut size={16} />
-                <span>Logout</span>
+                <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Disconnect</span>
               </button>
             </div>
           </motion.div>
