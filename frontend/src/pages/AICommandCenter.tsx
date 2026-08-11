@@ -21,6 +21,24 @@ export default function AICommandCenter() {
   };
 
   useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const history = await fetchApi<any[]>('/ai/chat');
+        if (history && history.length > 0) {
+          const formattedHistory = history.map(chat => ({
+            role: chat.role.toLowerCase() as 'ai' | 'user',
+            content: chat.message
+          }));
+          setMessages(formattedHistory);
+        }
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+      }
+    };
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 

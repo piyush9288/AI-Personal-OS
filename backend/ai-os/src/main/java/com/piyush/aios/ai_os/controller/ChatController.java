@@ -12,18 +12,31 @@ import org.springframework.http.ResponseEntity;
 
 import jakarta.validation.Valid;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import java.util.List;
+import com.piyush.aios.ai_os.entity.Chat;
+import com.piyush.aios.ai_os.service.ChatService;
+
 @RestController
 @RequestMapping("/ai")
 public class ChatController {
     private final AIOrchestratorService aiOrchestratorService;
+    private final ChatService chatService;
 
-    public ChatController(AIOrchestratorService aiOrchestratorService) {
+    public ChatController(AIOrchestratorService aiOrchestratorService, ChatService chatService) {
         this.aiOrchestratorService = aiOrchestratorService;
+        this.chatService = chatService;
     }
 
     @PostMapping("/chat")
     public ResponseEntity<ApiResponse<String>> chat(@Valid @RequestBody ChatRequest request) {
         String response = aiOrchestratorService.chat(request.getPrompt());
         return ResponseEntity.ok(ApiResponse.success("AI response generated successfully", response));
+    }
+
+    @GetMapping("/chat")
+    public ResponseEntity<ApiResponse<List<Chat>>> getChatHistory() {
+        List<Chat> history = chatService.getChatHistory();
+        return ResponseEntity.ok(ApiResponse.success("Chat history retrieved successfully", history));
     }
 }
