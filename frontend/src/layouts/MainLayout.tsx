@@ -95,7 +95,9 @@ export default function MainLayout() {
                     )}
                     <div className="overflow-hidden flex-1">
                       <p className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>{user?.name}</p>
-                      <p className="text-[11px] text-textMuted truncate font-medium">OS Admin</p>
+                      <p className="text-[11px] text-textMuted truncate font-medium">
+                        {user?.id === 1 ? 'OS Admin' : 'OS Operator'}
+                      </p>
                     </div>
                   </>
                 )}

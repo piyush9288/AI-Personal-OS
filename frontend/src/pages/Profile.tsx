@@ -161,7 +161,7 @@ export default function Profile() {
             <div className="w-full text-center space-y-2">
               <h2 className="text-xl font-bold text-white">{user?.name || 'Unknown User'}</h2>
               <p className="text-sm text-primary font-medium flex items-center justify-center gap-1">
-                <ShieldCheck size={14} /> OS Admin
+                <ShieldCheck size={14} /> {user?.id === 1 ? 'OS Admin' : 'OS Operator'}
               </p>
             </div>
           </div>
