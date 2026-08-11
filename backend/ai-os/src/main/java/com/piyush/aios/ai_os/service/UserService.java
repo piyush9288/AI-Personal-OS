@@ -18,6 +18,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    
+    @org.springframework.beans.factory.annotation.Value("${spring.mail.username:}")
+    private String adminEmail;
 
     public UserService(UserRepository userRepository,
                    PasswordEncoder passwordEncoder,
@@ -58,7 +61,16 @@ public class UserService {
         //     throw new RuntimeException("Email failed to send. Please check MAIL_USERNAME and MAIL_PASSWORD in Render: " + e.getMessage());
         // }
 
-        return savedUser;
+        return enrichUser(savedUser);
+    }
+    
+    private User enrichUser(User user) {
+        if (user != null && adminEmail != null && !adminEmail.isEmpty() && adminEmail.equalsIgnoreCase(user.getEmail())) {
+            user.setIsAdmin(true);
+        } else if (user != null) {
+            user.setIsAdmin(false);
+        }
+        return user;
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -81,15 +93,16 @@ public class UserService {
 
         String token = jwtService.generateToken(user);
 
-        return new LoginResponse(token, user);
+        return new LoginResponse(token, enrichUser(user));
     }
 
     public User getCurrentUser() {
         org.springframework.security.core.Authentication authentication =
                 org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        return enrichUser(user);
     }
 
     public User updateProfile(User updatedUser) {
@@ -117,7 +130,7 @@ public class UserService {
             existingUser.setLocation(updatedUser.getLocation());
         }
         
-        return userRepository.save(existingUser);
+        return enrichUser(userRepository.save(existingUser));
     }
 
     public boolean verifyEmail(String token) {

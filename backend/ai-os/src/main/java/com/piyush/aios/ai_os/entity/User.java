@@ -45,4 +45,7 @@ public class User {
     private boolean isVerified;
 
     private String verificationToken;
+
+    @jakarta.persistence.Transient
+    private Boolean isAdmin = false;
 }

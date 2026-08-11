@@ -8,6 +8,7 @@ export interface User {
   bio?: string;
   phone?: string;
   location?: string;
+  isAdmin?: boolean;
 }
 
 export type GoalStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
