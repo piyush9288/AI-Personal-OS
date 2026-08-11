@@ -107,6 +107,15 @@ public class UserService {
         if (updatedUser.getProfilePictureUrl() != null) {
             existingUser.setProfilePictureUrl(updatedUser.getProfilePictureUrl());
         }
+        if (updatedUser.getBio() != null) {
+            existingUser.setBio(updatedUser.getBio());
+        }
+        if (updatedUser.getPhone() != null) {
+            existingUser.setPhone(updatedUser.getPhone());
+        }
+        if (updatedUser.getLocation() != null) {
+            existingUser.setLocation(updatedUser.getLocation());
+        }
         
         return userRepository.save(existingUser);
     }

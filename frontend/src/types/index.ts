@@ -5,6 +5,9 @@ export interface User {
   education?: string;
   dob?: string;
   profilePictureUrl?: string;
+  bio?: string;
+  phone?: string;
+  location?: string;
 }
 
 export type GoalStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';

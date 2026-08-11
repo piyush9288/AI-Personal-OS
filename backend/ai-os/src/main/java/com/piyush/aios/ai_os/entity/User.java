@@ -34,6 +34,13 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String profilePictureUrl;
 
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    private String phone;
+
+    private String location;
+
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isVerified;
 
