@@ -32,13 +32,13 @@ export default function MainLayout() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="w-64 h-full glass-panel flex flex-col p-6 m-4 absolute md:relative z-40"
+            className="w-72 h-full bg-black/40 backdrop-blur-2xl border-r border-white/5 flex flex-col p-6 absolute md:relative z-40 shadow-[4px_0_24px_rgba(0,0,0,0.2)]"
           >
-            <div className="flex items-center space-x-3 mb-10">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(109,40,217,0.5)]">
+            <div className="flex items-center space-x-3 mb-12">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(var(--color-primary),0.5)]">
                 AI
               </div>
-              <h1 className="text-xl font-semibold tracking-wide text-white">AI-OS</h1>
+              <h1 className="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">AI-OS</h1>
             </div>
 
             <nav className="flex-1 space-y-2">
@@ -47,15 +47,27 @@ export default function MainLayout() {
                   key={item.name}
                   to={item.path}
                   className={({ isActive }) =>
-                    `flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 relative ${
+                    `flex items-center space-x-4 px-4 py-3.5 rounded-2xl transition-all duration-300 relative overflow-hidden group ${
                       isActive 
-                        ? 'text-white bg-white/10 border border-white/10' 
-                        : 'text-textMuted hover:text-white hover:bg-white/5'
+                        ? 'text-white shadow-[0_0_15px_rgba(var(--color-primary),0.2)]' 
+                        : 'text-textMuted hover:text-white'
                     }`
                   }
                 >
-                  <item.icon size={20} />
-                  <span>{item.name}</span>
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <motion.div 
+                          layoutId="sidebar-active"
+                          className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-2xl -z-10"
+                        />
+                      )}
+                      <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(var(--color-primary),0.4)]' : 'bg-white/5 group-hover:bg-white/10'}`}>
+                        <item.icon size={20} />
+                      </div>
+                      <span className="font-medium tracking-wide">{item.name}</span>
+                    </>
+                  )}
                 </NavLink>
               ))}
             </nav>
@@ -94,10 +106,12 @@ export default function MainLayout() {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <div className="flex-1 h-full overflow-y-auto p-6 pt-20 md:p-10 relative">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
-        <Outlet />
+      <div className="flex-1 h-full overflow-y-auto p-6 pt-20 md:p-10 relative bg-background">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none z-0" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[150px] pointer-events-none z-0" />
+        <div className="relative z-10 h-full">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

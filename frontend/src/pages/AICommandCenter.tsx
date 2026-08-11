@@ -125,20 +125,23 @@ export default function AICommandCenter() {
             {messages.map((msg, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.3 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`
-                  flex items-start max-w-[80%] space-x-3 
+                  flex items-start max-w-[85%] md:max-w-[75%] space-x-3 
                   ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : 'flex-row'}
                 `}>
-                  <div className={`p-2 rounded-lg flex-shrink-0 ${msg.role === 'user' ? 'bg-secondary/20 text-secondary' : 'bg-primary/20 text-primary'}`}>
+                  <div className={`p-2.5 rounded-xl flex-shrink-0 shadow-lg ${msg.role === 'user' ? 'bg-gradient-to-br from-accent to-primary text-white' : 'bg-white/5 border border-white/10 text-primary'}`}>
                     {msg.role === 'user' ? <User size={18} /> : <BrainCircuit size={18} />}
                   </div>
                   <div className={`
-                    p-4 rounded-2xl text-sm leading-relaxed shadow-lg
-                    ${msg.role === 'user' ? 'bg-secondary text-white rounded-tr-sm' : 'bg-surface border border-white/5 text-textMain rounded-tl-sm'}
+                    p-5 rounded-2xl text-[15px] leading-relaxed shadow-xl backdrop-blur-md relative
+                    ${msg.role === 'user' 
+                      ? 'bg-gradient-to-br from-accent/90 to-primary/90 text-white rounded-tr-sm border border-white/10' 
+                      : 'bg-black/40 border border-white/10 text-gray-200 rounded-tl-sm'}
                   `}>
                     {msg.content.split('\n').map((line, j) => (
                       <span key={j}>{line}<br/></span>
@@ -149,12 +152,13 @@ export default function AICommandCenter() {
             ))}
           </AnimatePresence>
           {isLoading && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
                <div className="flex items-start max-w-[80%] space-x-3 flex-row">
-                  <div className="p-2 rounded-lg flex-shrink-0 bg-primary/20 text-primary">
+                  <div className="p-2.5 rounded-xl flex-shrink-0 bg-white/5 border border-white/10 text-primary">
                     <BrainCircuit size={18} className="animate-pulse" />
                   </div>
-                  <div className="p-4 rounded-2xl bg-surface border border-white/5 text-textMuted rounded-tl-sm text-sm">
+                  <div className="p-5 rounded-2xl bg-black/40 border border-white/10 text-textMuted rounded-tl-sm text-[15px] flex items-center space-x-2">
+                    <span>Processing</span>
                     <span className="flex space-x-1">
                       <span className="animate-bounce">.</span>
                       <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
@@ -167,18 +171,19 @@ export default function AICommandCenter() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-4 border-t border-white/10 bg-surface/50 flex flex-col space-y-2">
+        <div className="p-4 md:p-6 border-t border-white/5 bg-black/20 backdrop-blur-xl flex flex-col space-y-2">
           {selectedFiles.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {selectedFiles.map((f, i) => (
-                <div key={i} className="flex items-center space-x-2 bg-white/10 px-3 py-1 rounded-full text-xs text-white">
+                <div key={i} className="flex items-center space-x-2 bg-white/10 border border-white/10 px-4 py-1.5 rounded-full text-xs text-white shadow-lg">
                   <span className="truncate max-w-[150px]">{f.file.name}</span>
-                  <button onClick={() => removeFile(i)} className="hover:text-red-400"><X size={12}/></button>
+                  <button onClick={() => removeFile(i)} className="hover:text-red-400 transition-colors"><X size={14}/></button>
                 </div>
               ))}
             </div>
           )}
-          <div className="relative flex items-center">
+          <div className="relative flex items-center group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-lg group-hover:blur-xl transition-all opacity-50" />
             <input 
               type="file" 
               multiple
@@ -189,9 +194,9 @@ export default function AICommandCenter() {
             />
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="absolute left-2 top-1/2 -translate-y-1/2 p-2 text-textMuted hover:text-white transition-colors"
+              className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 text-textMuted hover:text-primary transition-colors z-10"
             >
-              <Paperclip size={18} />
+              <Paperclip size={20} />
             </button>
             <input 
               type="text" 
@@ -200,14 +205,14 @@ export default function AICommandCenter() {
               onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
               placeholder="Ask AI-OS to plan your day or analyze a file..."
               disabled={isLoading}
-              className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-12 text-white placeholder:text-textMuted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-50"
+              className="w-full bg-black/60 backdrop-blur-md border border-white/10 hover:border-primary/50 rounded-2xl py-5 pl-14 pr-16 text-white placeholder:text-textMuted/70 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-50 relative z-0 text-[15px]"
             />
             <button 
               onClick={handleSend}
               disabled={isLoading || (!input.trim() && selectedFiles.length === 0)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl hover:shadow-[0_0_15px_rgba(var(--color-primary),0.6)] hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100 z-10"
             >
-              <Send size={18} />
+              <Send size={20} className={isLoading ? "opacity-50" : ""} />
             </button>
           </div>
         </div>
