@@ -25,6 +25,7 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @jakarta.persistence.Column(columnDefinition = "TEXT")
     private String message;
 
     @Enumerated(EnumType.STRING)

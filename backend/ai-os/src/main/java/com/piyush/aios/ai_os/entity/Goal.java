@@ -30,6 +30,7 @@ public class Goal {
 
     private String title;
 
+    @jakarta.persistence.Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)

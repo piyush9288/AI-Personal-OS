@@ -31,6 +31,7 @@ public class Task {
 
     private String title;
 
+    @jakarta.persistence.Column(columnDefinition = "TEXT")
     private String description;
 
     private LocalDate dueDate;
