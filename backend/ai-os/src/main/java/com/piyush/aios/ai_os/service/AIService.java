@@ -263,6 +263,8 @@ public class AIService {
                 - DASHBOARD: The user wants to see their stats.
                 - GENERAL: The user is chatting, asking a question, or the request doesn't match above.
                 
+                CRITICAL INSTRUCTION: When extracting 'title', 'goalTitle', or 'taskTitle', extract ONLY the exact short name of the goal/task. DO NOT include the whole sentence, verbs, or extra context words.
+                
                 You MUST respond with ONLY a valid JSON object. No markdown formatting, no backticks.
                 {
                   "intent": "CREATE_TASK",

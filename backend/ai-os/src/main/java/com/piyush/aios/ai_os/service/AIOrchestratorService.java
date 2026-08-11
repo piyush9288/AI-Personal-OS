@@ -67,7 +67,9 @@ public class AIOrchestratorService {
                         List<Goal> allGoals = goalService.getAllGoals();
                         Goal goalToDelete = null;
                         for (Goal g : allGoals) {
-                            if (smartResponse.getTitle() != null && g.getTitle().toLowerCase().contains(smartResponse.getTitle().toLowerCase())) {
+                            if (smartResponse.getTitle() != null && 
+                               (g.getTitle().toLowerCase().contains(smartResponse.getTitle().toLowerCase()) || 
+                                smartResponse.getTitle().toLowerCase().contains(g.getTitle().toLowerCase()))) {
                                 goalToDelete = g;
                                 break;
                             }
@@ -128,7 +130,9 @@ public class AIOrchestratorService {
                         List<Task> allTasks = taskService.getAllUserTasks();
                         Task taskToComplete = null;
                         for (Task t : allTasks) {
-                            if (t.getStatus() != TaskStatus.COMPLETED && smartResponse.getTaskTitle() != null && t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase())) {
+                            if (t.getStatus() != TaskStatus.COMPLETED && smartResponse.getTaskTitle() != null && 
+                               (t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase()) ||
+                                smartResponse.getTaskTitle().toLowerCase().contains(t.getTitle().toLowerCase()))) {
                                 taskToComplete = t;
                                 break;
                             }
@@ -164,7 +168,9 @@ public class AIOrchestratorService {
                         List<Task> allTasks = taskService.getAllUserTasks();
                         Task taskToDelete = null;
                         for (Task t : allTasks) {
-                            if (smartResponse.getTaskTitle() != null && t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase())) {
+                            if (smartResponse.getTaskTitle() != null && 
+                               (t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase()) ||
+                                smartResponse.getTaskTitle().toLowerCase().contains(t.getTitle().toLowerCase()))) {
                                 taskToDelete = t;
                                 break;
                             }
