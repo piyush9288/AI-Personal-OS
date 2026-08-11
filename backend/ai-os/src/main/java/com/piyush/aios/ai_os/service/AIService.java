@@ -255,7 +255,7 @@ public class AIService {
                 Map the command to one of these intents and extract the required fields.
                 - CREATE_GOAL: The user wants to create a goal. Extract 'title'.
                 - CREATE_TASK: The user wants to create one or more tasks. Extract 'goalTitle' and 'taskTitles' (array of strings).
-                - AUTO_GENERATE_TASKS: The user wants you to auto-generate tasks for a goal. Extract 'goalTitle' and optionally 'count' (integer).
+                - AUTO_GENERATE_TASKS: The user wants you to auto-generate tasks for a goal. Extract 'goalTitle' and optionally 'count' (integer). If they say 'all' or 'sara' or 'pura', set 'count': 8.
                 - START_TUTORING: The user wants your help to complete tasks step-by-step or learn. Extract 'goalTitle' if available.
                 - COMPLETE_TASK: The user wants to mark specific tasks as done (e.g. 'first 3 tasks', 'task A and B', 'all tasks for goal X'). Extract 'taskTitles' (array of EXACT short names. If they say 'first 3 tasks', infer their names from history if possible, else put 'count': 3).
                 - COMPLETE_ALL_TASKS: The user wants to mark ALL their tasks as done across all goals.

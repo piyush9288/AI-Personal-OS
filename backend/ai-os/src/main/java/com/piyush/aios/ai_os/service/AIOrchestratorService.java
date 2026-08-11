@@ -98,7 +98,7 @@ public class AIOrchestratorService {
                             CreateGoalRequest goalReq = new CreateGoalRequest();
                             goalReq.setTitle(smartResponse.getTitle());
                             Goal goal = goalService.createGoal(goalReq);
-                            aiResponse = "✅ Goal created successfully: **" + goal.getTitle() + "**\n\nWould you like me to auto-generate a smart task list for this goal, or will you add tasks manually? (Say: 'Auto-generate tasks for " + goal.getTitle() + "')";
+                            aiResponse = "✅ Goal created successfully: **" + goal.getTitle() + "**\n\nWould you like me to auto-generate tasks for this goal? If yes, tell me how many! (e.g., 'Generate 3 tasks for " + goal.getTitle() + "' or 'Generate all possible tasks')";
                         }
                     } catch (Exception e) {
                         aiResponse = "⚠️ Could not create goal. Please try again.";
