@@ -1,17 +1,26 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import FloatingCore from '../three/FloatingCore';
 import { useAuth } from '../store/AuthContext';
 import { fetchApi } from '../api/client';
-import { Brain, Target, CheckSquare, Zap, ChevronRight, Sparkles, Shield, Rocket } from 'lucide-react';
+import { Brain, Target, CheckSquare, Zap, ChevronRight, Sparkles, Shield, Rocket, Terminal } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [isBooting, setIsBooting] = useState(true);
   const targetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // OS Boot sequence timer
+    const timer = setTimeout(() => {
+      setIsBooting(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
   
   const { scrollYProgress } = useScroll({
     target: targetRef,
@@ -338,6 +347,69 @@ export default function Landing() {
                 </button>
               </p>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Boot Sequence Overlay */}
+      <AnimatePresence>
+        {isBooting && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black"
+          >
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+              <div className="w-[800px] h-[800px] bg-primary/30 rounded-full blur-[120px]" />
+            </div>
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="flex items-center gap-4 mb-10"
+              >
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                  <motion.div 
+                    animate={{ rotate: 360 }} 
+                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }} 
+                    className="absolute inset-0 border-t-2 border-primary border-r-2 rounded-full" 
+                  />
+                  <Terminal size={24} className="text-primary animate-pulse" />
+                </div>
+                <span className="text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase">
+                  AI-OS
+                </span>
+              </motion.div>
+              
+              <div className="w-80 h-1.5 bg-white/10 rounded-full overflow-hidden shadow-inner relative">
+                <motion.div 
+                  initial={{ width: "0%" }} 
+                  animate={{ width: "100%" }} 
+                  transition={{ duration: 2, ease: "easeInOut" }} 
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-accent shadow-[0_0_10px_rgba(var(--color-primary),0.8)]" 
+                />
+              </div>
+              
+              <div className="mt-6 flex flex-col items-center gap-1">
+                <motion.p 
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                  className="text-xs text-primary font-mono tracking-widest uppercase"
+                >
+                  Initializing Neural Pathways...
+                </motion.p>
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="text-[10px] text-textMuted font-mono"
+                >
+                  Loading OS core modules v2.0.4
+                </motion.p>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
