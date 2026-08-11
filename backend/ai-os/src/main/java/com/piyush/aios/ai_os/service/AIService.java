@@ -148,32 +148,54 @@ public class AIService {
     }
 
     private String callGemini(GeminiRequest request) {
-        try {
-            GeminiResponse response = webClient.post()
-                    .uri(apiUrl + "?key=" + apiKey)
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(GeminiResponse.class)
-                    .block();
+        String[] fallbackModels = {
+            apiUrl,
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        };
+        
+        Exception lastException = null;
 
-            if (response == null
-                    || response.getCandidates() == null
-                    || response.getCandidates().isEmpty()) {
-
-                    return "⚠️ Gemini returned an empty response.";
+        for (String currentUrl : fallbackModels) {
+            try {
+                // Ensure no trailing spaces or newlines in the URL or Key
+                String safeUrl = currentUrl.trim();
+                String safeKey = apiKey.trim();
+                
+                GeminiResponse response = webClient.post()
+                        .uri(safeUrl + "?key=" + safeKey)
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(GeminiResponse.class)
+                        .block();
+    
+                if (response == null
+                        || response.getCandidates() == null
+                        || response.getCandidates().isEmpty()) {
+    
+                        return "⚠️ Gemini returned an empty response.";
+                }
+    
+                return response.getCandidates()
+                        .get(0)
+                        .getContent()
+                        .getParts()
+                        .get(0)
+                        .getText();
+            } catch (org.springframework.web.reactive.function.client.WebClientResponseException.NotFound e) {
+                System.err.println("Gemini API Error (404) for URL " + currentUrl + ": " + e.getMessage());
+                lastException = e;
+                // Continue to the next fallback model
+            } catch (Exception e) {
+                System.err.println("Gemini API Error for URL " + currentUrl + ": " + e.getMessage());
+                e.printStackTrace();
+                return "⚠️ It looks like the AI cannot be reached. Error: " + e.getMessage() + ". Please check if your GEMINI_API_KEY is correctly set in your environment variables on Render.";
             }
-
-            return response.getCandidates()
-                    .get(0)
-                    .getContent()
-                    .getParts()
-                    .get(0)
-                    .getText();
-        } catch (Exception e) {
-            System.err.println("Gemini API Error: " + e.getMessage());
-            e.printStackTrace();
-            return "⚠️ It looks like the AI cannot be reached. Error: " + e.getMessage() + ". Please check if your GEMINI_API_KEY is correctly set in your environment variables on Render.";
         }
+        
+        return "⚠️ It looks like the AI cannot be reached. All fallback models returned 404 Not Found. Error: " + lastException.getMessage() + ". Please check if the Generative Language API is enabled for your project, or verify your region's access.";
     }
 
         public String generateSimpleResponse(String prompt) {
