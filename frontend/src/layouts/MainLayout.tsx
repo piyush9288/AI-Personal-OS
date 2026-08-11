@@ -94,7 +94,7 @@ export default function MainLayout() {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <div className="flex-1 h-full overflow-y-auto p-4 md:p-8 relative">
+      <div className="flex-1 h-full overflow-y-auto p-6 pt-20 md:p-10 relative">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
         <Outlet />
