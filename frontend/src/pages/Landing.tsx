@@ -11,6 +11,7 @@ export default function Landing() {
   const { login } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
   const targetRef = useRef<HTMLDivElement>(null);
   
   const { scrollYProgress } = useScroll({
@@ -43,8 +44,13 @@ export default function Landing() {
       });
 
       if (isLogin) {
+        setShowWelcome(true);
         login(response.token, response.user);
-        navigate('/app');
+        
+        // Wait for 3.5 seconds to show the animation, then redirect
+        setTimeout(() => {
+          navigate('/app');
+        }, 3500);
       } else {
         setIsLogin(true);
         setError('Registration successful! You can now log in.');
@@ -337,6 +343,52 @@ export default function Landing() {
                   {isLogin ? 'Initialize Here' : 'Login Here'}
                 </button>
               </p>
+            </motion.div>
+          </motion.div>
+        )}
+      {/* Welcome Animation Modal */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-black"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 1, ease: "easeOut" }}
+              className="relative w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(var(--color-primary),0.3)] border border-white/10"
+            >
+              <img 
+                src="/handshake.jpg" 
+                alt="AI Handshake" 
+                className="w-full h-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              
+              <motion.div 
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.8 }}
+                className="absolute bottom-12 left-0 right-0 text-center space-y-2"
+              >
+                <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent tracking-widest uppercase">
+                  Connection Established
+                </h2>
+                <p className="text-xl text-gray-300 font-medium tracking-wide">
+                  Welcome to AI-OS, Commander.
+                </p>
+                <div className="flex justify-center mt-6">
+                  <div className="flex space-x-2">
+                    <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }} className="w-2 h-2 rounded-full bg-primary" />
+                    <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }} className="w-2 h-2 rounded-full bg-accent" />
+                    <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.6 }} className="w-2 h-2 rounded-full bg-primary" />
+                  </div>
+                </div>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
