@@ -1,19 +1,26 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import FloatingCore from '../three/FloatingCore';
 import { useAuth } from '../store/AuthContext';
 import { fetchApi } from '../api/client';
-import { Brain, Target, CheckSquare, Zap, ChevronRight, Sparkles, Shield, Rocket } from 'lucide-react';
-import HandshakeAnimation from '../components/HandshakeAnimation';
+import { Brain, Target, CheckSquare, Zap, ChevronRight, Sparkles, Shield, Rocket, Terminal } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [isBooting, setIsBooting] = useState(true);
   const targetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // OS Boot sequence timer
+    const timer = setTimeout(() => {
+      setIsBooting(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
   
   const { scrollYProgress } = useScroll({
     target: targetRef,
@@ -45,14 +52,8 @@ export default function Landing() {
       });
 
       if (isLogin) {
-        setShowAuth(false);
-        setShowWelcome(true);
-        
-        // Let the animation play, then login and navigate
-        setTimeout(() => {
-          login(response.token, response.user);
-          navigate('/app');
-        }, 3500);
+        login(response.token, response.user);
+        navigate('/app');
       } else {
         setIsLogin(true);
         setError('Registration successful! You can now log in.');
@@ -349,46 +350,66 @@ export default function Landing() {
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Welcome Animation Modal */}
+      {/* Boot Sequence Overlay */}
       <AnimatePresence>
-        {showWelcome && (
+        {isBooting && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-black"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black"
           >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 1, ease: "easeOut" }}
-              className="relative w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(var(--color-primary),0.3)] border border-white/10 bg-black/80 flex items-center justify-center"
-            >
-              <HandshakeAnimation />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
-              
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+              <div className="w-[800px] h-[800px] bg-primary/30 rounded-full blur-[120px]" />
+            </div>
+            
+            <div className="relative z-10 flex flex-col items-center">
               <motion.div 
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 1.2, duration: 0.8 }}
-                className="absolute bottom-12 left-0 right-0 text-center space-y-2"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="flex items-center gap-4 mb-10"
               >
-                <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent tracking-widest uppercase">
-                  Connection Established
-                </h2>
-                <p className="text-xl text-gray-300 font-medium tracking-wide">
-                  Welcome to AI-OS, Commander.
-                </p>
-                <div className="flex justify-center mt-6">
-                  <div className="flex space-x-2">
-                    <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }} className="w-2 h-2 rounded-full bg-primary" />
-                    <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }} className="w-2 h-2 rounded-full bg-accent" />
-                    <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.6 }} className="w-2 h-2 rounded-full bg-primary" />
-                  </div>
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                  <motion.div 
+                    animate={{ rotate: 360 }} 
+                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }} 
+                    className="absolute inset-0 border-t-2 border-primary border-r-2 rounded-full" 
+                  />
+                  <Terminal size={24} className="text-primary animate-pulse" />
                 </div>
+                <span className="text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase">
+                  AI-OS
+                </span>
               </motion.div>
-            </motion.div>
+              
+              <div className="w-80 h-1.5 bg-white/10 rounded-full overflow-hidden shadow-inner relative">
+                <motion.div 
+                  initial={{ width: "0%" }} 
+                  animate={{ width: "100%" }} 
+                  transition={{ duration: 2, ease: "easeInOut" }} 
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-accent shadow-[0_0_10px_rgba(var(--color-primary),0.8)]" 
+                />
+              </div>
+              
+              <div className="mt-6 flex flex-col items-center gap-1">
+                <motion.p 
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                  className="text-xs text-primary font-mono tracking-widest uppercase"
+                >
+                  Initializing Neural Pathways...
+                </motion.p>
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="text-[10px] text-textMuted font-mono"
+                >
+                  Loading OS core modules v2.0.4
+                </motion.p>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
