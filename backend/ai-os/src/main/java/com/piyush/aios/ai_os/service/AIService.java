@@ -199,8 +199,8 @@ public class AIService {
                         .getParts()
                         .get(0)
                         .getText();
-            } catch (org.springframework.web.reactive.function.client.WebClientResponseException.NotFound e) {
-                System.err.println("Gemini API Error (404) for URL " + currentUrl + ": " + e.getMessage());
+            } catch (org.springframework.web.reactive.function.client.WebClientResponseException e) {
+                System.err.println("Gemini API Error (" + e.getStatusCode() + ") for URL " + currentUrl + ": " + e.getMessage());
                 lastException = e;
                 // Continue to the next fallback model
             } catch (Exception e) {
