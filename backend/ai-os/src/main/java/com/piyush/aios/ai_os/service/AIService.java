@@ -254,25 +254,27 @@ public class AIService {
                 You are the core intelligence of AI Personal OS. The user will give you a command in English, Hindi, or Hinglish.
                 Map the command to one of these intents and extract the required fields.
                 - CREATE_GOAL: The user wants to create a goal. Extract 'title'.
-                - CREATE_TASK: The user wants to create a task. Extract 'goalTitle' and 'taskTitle'.
-                - AUTO_GENERATE_TASKS: The user wants you to auto-generate tasks for a goal. Extract 'goalTitle'.
+                - CREATE_TASK: The user wants to create one or more tasks. Extract 'goalTitle' and 'taskTitles' (array of strings).
+                - AUTO_GENERATE_TASKS: The user wants you to auto-generate tasks for a goal. Extract 'goalTitle' and optionally 'count' (integer).
                 - START_TUTORING: The user wants your help to complete tasks step-by-step or learn. Extract 'goalTitle' if available.
-                - COMPLETE_TASK: The user wants to mark a single task as done. Extract 'taskTitle'.
-                - COMPLETE_ALL_TASKS: The user wants to mark ALL their tasks as done.
-                - DELETE_TASK: The user wants to delete a task. Extract 'taskTitle'.
+                - COMPLETE_TASK: The user wants to mark specific tasks as done (e.g. 'first 3 tasks', 'task A and B', 'all tasks for goal X'). Extract 'taskTitles' (array of EXACT short names. If they say 'first 3 tasks', infer their names from history if possible, else put 'count': 3).
+                - COMPLETE_ALL_TASKS: The user wants to mark ALL their tasks as done across all goals.
+                - DELETE_TASK: The user wants to delete specific tasks. Extract 'taskTitles' (array).
                 - DELETE_GOAL: The user wants to delete a goal. Extract 'title'.
                 - SHOW_GOALS: The user wants to see their goals.
                 - SHOW_TASKS: The user wants to see their tasks.
                 - DASHBOARD: The user wants to see their stats.
                 - GENERAL: The user is chatting, asking for video links, asking a question, or the request doesn't match above.
                 
-                CRITICAL INSTRUCTION: When extracting 'title', 'goalTitle', or 'taskTitle', extract ONLY the exact short name of the goal/task. DO NOT include the whole sentence, verbs, or extra context words.
+                CRITICAL INSTRUCTION: When extracting 'title', 'goalTitle', or 'taskTitles', extract ONLY the exact short names of the goals/tasks. DO NOT include the whole sentence, verbs, or extra context words.
                 
                 You MUST respond with ONLY a valid JSON object. No markdown formatting, no backticks.
                 {
                   "intent": "CREATE_TASK",
                   "goalTitle": "extracted goal name if any",
-                  "taskTitle": "extracted task name if any",
+                  "taskTitle": "single task if any",
+                  "taskTitles": ["task 1", "task 2"],
+                  "count": 5,
                   "title": "extracted generic title if any",
                   "aiResponse": "If intent is GENERAL, write your full helpful response here. Never refuse a request. Be highly conversational in the user's language."
                 }
@@ -302,14 +304,15 @@ public class AIService {
             }
         }
 
-        public List<String> generateTasksForGoal(String goalTitle) {
+        public List<String> generateTasksForGoal(String goalTitle, Integer count) {
+            int taskCount = (count != null && count > 0) ? count : 3;
             String prompt = """
                 You are AI Personal OS. The user wants to auto-generate tasks for their goal: "%s".
-                Create 3 to 5 highly relevant, actionable tasks to help them achieve this goal.
+                Create EXACTLY %d highly relevant, actionable tasks to help them achieve this goal.
                 
                 You MUST respond with ONLY a valid JSON array of strings. No markdown formatting, no backticks.
-                ["Task 1", "Task 2", "Task 3"]
-                """.formatted(goalTitle);
+                ["Task 1", "Task 2"]
+                """.formatted(goalTitle, taskCount);
             
             try {
                 String responseText = callGemini(createRequest(prompt));

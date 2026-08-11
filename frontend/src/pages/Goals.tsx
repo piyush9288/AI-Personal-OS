@@ -155,10 +155,12 @@ export default function Goals() {
               key={goal.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass-panel p-6 flex flex-col"
+              whileHover={{ y: -5, scale: 1.02 }}
+              className="glass-panel p-6 flex flex-col relative overflow-hidden group cursor-pointer border border-white/5 hover:border-primary/30 transition-all duration-300"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-primary/20 rounded-xl text-primary">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className="p-3 bg-primary/20 rounded-xl text-primary shadow-[0_0_15px_rgba(var(--color-primary),0.3)] group-hover:shadow-[0_0_25px_rgba(var(--color-primary),0.6)] transition-shadow duration-300">
                   <Target size={24} />
                 </div>
                 <div className="flex gap-2">
@@ -182,16 +184,21 @@ export default function Goals() {
               <h3 className="text-xl font-semibold text-white mb-2">{goal.title}</h3>
               <p className="text-textMuted text-sm mb-6 flex-grow">{goal.description}</p>
               
-              <div className="space-y-2 mt-auto">
+              <div className="space-y-2 mt-auto relative z-10">
                 <div className="flex justify-between text-sm">
                   <span className="text-textMuted">Progress</span>
                   <span className="text-white font-medium">{goal.progress}%</span>
                 </div>
-                <div className="w-full bg-white/10 rounded-full h-2">
+                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden shadow-inner">
                   <div
-                    className="bg-primary rounded-full h-2 transition-all duration-500"
+                    className={`h-full rounded-full transition-all duration-1000 relative ${
+                      goal.status === 'COMPLETED' ? 'bg-gradient-to-r from-green-400 to-green-600 shadow-[0_0_10px_rgba(74,222,128,0.8)]' :
+                      'bg-gradient-to-r from-primary to-accent shadow-[0_0_10px_rgba(var(--color-primary),0.8)]'
+                    }`}
                     style={{ width: `${goal.progress}%` }}
-                  />
+                  >
+                    <div className="absolute top-0 right-0 bottom-0 left-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress-stripes_1s_linear_infinite]" />
+                  </div>
                 </div>
               </div>
             </motion.div>

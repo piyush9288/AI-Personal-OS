@@ -122,8 +122,8 @@ public class AIOrchestratorService {
                             }
                             
                             if (targetGoal != null) {
-                                List<String> generatedTasks = aiService.generateTasksForGoal(targetGoal.getTitle());
-                                StringBuilder sb = new StringBuilder("✅ I have auto-generated the following tasks for **" + targetGoal.getTitle() + "**:\n\n");
+                                List<String> generatedTasks = aiService.generateTasksForGoal(targetGoal.getTitle(), smartResponse.getCount());
+                                StringBuilder sb = new StringBuilder("✅ I have auto-generated " + generatedTasks.size() + " tasks for **" + targetGoal.getTitle() + "**:\n\n");
                                 for (String t : generatedTasks) {
                                     CreateTaskFromAIRequest tr = new CreateTaskFromAIRequest();
                                     tr.setGoalTitle(targetGoal.getTitle());
@@ -148,16 +148,26 @@ public class AIOrchestratorService {
     
                 case "CREATE_TASK":
                     try {
-                        if (smartResponse.getTaskTitle() == null || smartResponse.getTaskTitle().isEmpty()) {
-                            aiResponse = "⚠️ Please specify a task title.";
-                        } else if (smartResponse.getGoalTitle() == null || smartResponse.getGoalTitle().isEmpty()) {
+                        if (smartResponse.getGoalTitle() == null || smartResponse.getGoalTitle().isEmpty()) {
                             aiResponse = "⚠️ Please specify which goal this task belongs to.";
-                        } else {
+                        } else if (smartResponse.getTaskTitles() != null && !smartResponse.getTaskTitles().isEmpty()) {
+                            StringBuilder sb = new StringBuilder("✅ Tasks created successfully for **" + smartResponse.getGoalTitle() + "**:\n");
+                            for (String tt : smartResponse.getTaskTitles()) {
+                                CreateTaskFromAIRequest taskReq = new CreateTaskFromAIRequest();
+                                taskReq.setGoalTitle(smartResponse.getGoalTitle());
+                                taskReq.setTaskTitle(tt);
+                                Task task = taskService.createTaskFromAI(taskReq);
+                                sb.append("- ").append(task.getTitle()).append("\n");
+                            }
+                            aiResponse = sb.toString();
+                        } else if (smartResponse.getTaskTitle() != null && !smartResponse.getTaskTitle().isEmpty()) {
                             CreateTaskFromAIRequest taskReq = new CreateTaskFromAIRequest();
                             taskReq.setGoalTitle(smartResponse.getGoalTitle());
                             taskReq.setTaskTitle(smartResponse.getTaskTitle());
                             Task task = taskService.createTaskFromAI(taskReq);
                             aiResponse = "✅ Task created successfully.\n\nGoal: " + smartResponse.getGoalTitle() + "\nTask: " + task.getTitle();
+                        } else {
+                            aiResponse = "⚠️ Please specify a task title.";
                         }
                     } catch (com.piyush.aios.ai_os.exception.GoalNotFoundException e) {
                         aiResponse = "⚠️ " + e.getMessage() + ". Please make sure the goal exists.";
@@ -191,61 +201,103 @@ public class AIOrchestratorService {
                 case "COMPLETE_TASK":
                     try {
                         List<Task> allTasks = taskService.getAllUserTasks();
-                        Task taskToComplete = null;
-                        for (Task t : allTasks) {
-                            if (t.getStatus() != TaskStatus.COMPLETED && smartResponse.getTaskTitle() != null && 
-                               (t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase()) ||
-                                smartResponse.getTaskTitle().toLowerCase().contains(t.getTitle().toLowerCase()))) {
-                                taskToComplete = t;
-                                break;
+                        java.util.List<Task> tasksToComplete = new java.util.ArrayList<>();
+                        
+                        if (smartResponse.getTaskTitles() != null && !smartResponse.getTaskTitles().isEmpty()) {
+                            for (String tt : smartResponse.getTaskTitles()) {
+                                for (Task t : allTasks) {
+                                    if (t.getStatus() != TaskStatus.COMPLETED && 
+                                       (t.getTitle().toLowerCase().contains(tt.toLowerCase()) ||
+                                        tt.toLowerCase().contains(t.getTitle().toLowerCase()))) {
+                                        tasksToComplete.add(t);
+                                        break; // Only match one per title
+                                    }
+                                }
+                            }
+                        } else if (smartResponse.getCount() != null && smartResponse.getCount() > 0) {
+                            List<Task> pending = taskService.getPendingTasks();
+                            for (int i = 0; i < Math.min(smartResponse.getCount(), pending.size()); i++) {
+                                tasksToComplete.add(pending.get(i));
+                            }
+                        } else if (smartResponse.getTaskTitle() != null) {
+                            for (Task t : allTasks) {
+                                if (t.getStatus() != TaskStatus.COMPLETED && 
+                                   (t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase()) ||
+                                    smartResponse.getTaskTitle().toLowerCase().contains(t.getTitle().toLowerCase()))) {
+                                    tasksToComplete.add(t);
+                                    break;
+                                }
                             }
                         }
                         
-                        if (taskToComplete != null) {
-                            UpdateTaskRequest update = new UpdateTaskRequest();
-                            update.setTitle(taskToComplete.getTitle());
-                            update.setDescription(taskToComplete.getDescription());
-                            update.setDueDate(taskToComplete.getDueDate());
-                            update.setPriority(taskToComplete.getPriority());
-                            update.setStatus(TaskStatus.COMPLETED);
+                        if (!tasksToComplete.isEmpty()) {
+                            StringBuilder sb = new StringBuilder("✅ Completed the following tasks:\n");
+                            Goal updatedGoal = null;
+                            for (Task tToComplete : tasksToComplete) {
+                                UpdateTaskRequest update = new UpdateTaskRequest();
+                                update.setTitle(tToComplete.getTitle());
+                                update.setDescription(tToComplete.getDescription());
+                                update.setDueDate(tToComplete.getDueDate());
+                                update.setPriority(tToComplete.getPriority());
+                                update.setStatus(TaskStatus.COMPLETED);
+                                
+                                Task updatedTask = taskService.updateTask(tToComplete.getId(), update);
+                                updatedGoal = goalService.getGoalById(updatedTask.getGoal().getId());
+                                sb.append("- ").append(updatedTask.getTitle()).append("\n");
+                            }
                             
-                            Task updatedTask = taskService.updateTask(taskToComplete.getId(), update);
-                            Goal updatedGoal = goalService.getGoalById(updatedTask.getGoal().getId());
-                            
-                            if (updatedGoal.getProgress() == 100) {
-                                aiResponse = "🎉 Congratulations! You have completed all tasks for the goal: " + updatedGoal.getTitle() + "!\nYou've achieved 100% completion! 🎊\nIf you'd like to delete this goal now, just type 'delete goal " + updatedGoal.getTitle() + "'. Otherwise, it will be automatically removed after 2 days.";
+                            if (updatedGoal != null && updatedGoal.getProgress() == 100) {
+                                aiResponse = sb.toString() + "\n🎉 Congratulations! You have completed all tasks for the goal: **" + updatedGoal.getTitle() + "**!\nYou've achieved 100% completion! 🎊\n\nWould you like me to delete this completed goal now? If you say 'no', I will automatically clean it up in 2 days.";
+                            } else if (updatedGoal != null) {
+                                aiResponse = sb.toString() + "\nYour goal '" + updatedGoal.getTitle() + "' is now at " + updatedGoal.getProgress() + "%!";
                             } else {
-                                aiResponse = "✅ Task marked as completed: " + updatedTask.getTitle() + "\nYour goal '" + updatedGoal.getTitle() + "' is now at " + updatedGoal.getProgress() + "%!";
+                                aiResponse = sb.toString();
                             }
                         } else {
-                            // Fallback if no task title matched
-                            aiResponse = "⚠️ Could not find an incomplete task matching: " + smartResponse.getTaskTitle();
+                            aiResponse = "⚠️ Could not find any incomplete tasks matching your request.";
                         }
                     } catch (Exception e) {
-                        aiResponse = "⚠️ Could not complete task. " + e.getMessage();
+                        aiResponse = "⚠️ Could not complete task(s). " + e.getMessage();
                     }
                     break;
                     
                 case "DELETE_TASK":
                     try {
                         List<Task> allTasks = taskService.getAllUserTasks();
-                        Task taskToDelete = null;
-                        for (Task t : allTasks) {
-                            if (smartResponse.getTaskTitle() != null && 
-                               (t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase()) ||
-                                smartResponse.getTaskTitle().toLowerCase().contains(t.getTitle().toLowerCase()))) {
-                                taskToDelete = t;
-                                break;
+                        java.util.List<Task> tasksToDelete = new java.util.ArrayList<>();
+                        
+                        if (smartResponse.getTaskTitles() != null && !smartResponse.getTaskTitles().isEmpty()) {
+                            for (String tt : smartResponse.getTaskTitles()) {
+                                for (Task t : allTasks) {
+                                    if (t.getTitle().toLowerCase().contains(tt.toLowerCase()) ||
+                                        tt.toLowerCase().contains(t.getTitle().toLowerCase())) {
+                                        tasksToDelete.add(t);
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if (smartResponse.getTaskTitle() != null) {
+                            for (Task t : allTasks) {
+                                if (t.getTitle().toLowerCase().contains(smartResponse.getTaskTitle().toLowerCase()) ||
+                                    smartResponse.getTaskTitle().toLowerCase().contains(t.getTitle().toLowerCase())) {
+                                    tasksToDelete.add(t);
+                                    break;
+                                }
                             }
                         }
-                        if (taskToDelete != null) {
-                            taskService.deleteTask(taskToDelete.getId());
-                            aiResponse = "🗑️ Task successfully deleted: " + taskToDelete.getTitle();
+                        
+                        if (!tasksToDelete.isEmpty()) {
+                            StringBuilder sb = new StringBuilder("🗑️ Deleted the following tasks:\n");
+                            for (Task t : tasksToDelete) {
+                                taskService.deleteTask(t.getId());
+                                sb.append("- ").append(t.getTitle()).append("\n");
+                            }
+                            aiResponse = sb.toString();
                         } else {
-                            aiResponse = "⚠️ Could not find a task with that name to delete.";
+                            aiResponse = "⚠️ Could not find the task(s) to delete.";
                         }
                     } catch (Exception e) {
-                        aiResponse = "⚠️ Error deleting task: " + e.getMessage();
+                        aiResponse = "⚠️ Error deleting task(s): " + e.getMessage();
                     }
                     break;
     

@@ -223,10 +223,12 @@ export default function Tasks() {
               key={task.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass-panel p-6 flex flex-col"
+              whileHover={{ y: -5, scale: 1.02 }}
+              className="glass-panel p-6 flex flex-col relative overflow-hidden group cursor-pointer border border-white/5 hover:border-accent/30 transition-all duration-300"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-accent/20 rounded-xl text-accent">
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className="p-3 bg-accent/20 rounded-xl text-accent shadow-[0_0_15px_rgba(var(--color-accent),0.3)] group-hover:shadow-[0_0_25px_rgba(var(--color-accent),0.6)] transition-shadow duration-300">
                   <CheckSquare size={24} />
                 </div>
                 <div className="flex gap-2">
@@ -264,13 +266,13 @@ export default function Tasks() {
                   </button>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">{task.title}</h3>
+              <h3 className="text-xl font-semibold text-white mb-2 relative z-10">{task.title}</h3>
               {task.description && (
-                <p className="text-textMuted text-sm mb-4 flex-grow">{task.description}</p>
+                <p className="text-textMuted text-sm mb-4 flex-grow relative z-10">{task.description}</p>
               )}
               
-              <div className="mt-auto pt-4 border-t border-white/5 flex items-center gap-2 text-sm text-textMuted">
-                <Clock size={16} className="text-primary" />
+              <div className="mt-auto pt-4 border-t border-white/5 flex items-center gap-2 text-sm text-textMuted relative z-10">
+                <Clock size={16} className="text-accent" />
                 <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}</span>
               </div>
             </motion.div>
