@@ -30,7 +30,7 @@ public class ChatController {
 
     @PostMapping("/chat")
     public ResponseEntity<ApiResponse<String>> chat(@Valid @RequestBody ChatRequest request) {
-        String response = aiOrchestratorService.chat(request.getPrompt());
+        String response = aiOrchestratorService.chat(request);
         return ResponseEntity.ok(ApiResponse.success("AI response generated successfully", response));
     }
 

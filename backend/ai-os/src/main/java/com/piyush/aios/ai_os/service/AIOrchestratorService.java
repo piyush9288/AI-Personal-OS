@@ -47,8 +47,9 @@ public class AIOrchestratorService {
         this.chatService = chatService;
     }
 
-    public String chat(String prompt) {
+    public String chat(com.piyush.aios.ai_os.dto.ChatRequest chatRequest) {
         try {
+            String prompt = chatRequest.getPrompt();
             // Save the user message first
             chatService.saveUserMessage(prompt);
     
@@ -90,7 +91,7 @@ public class AIOrchestratorService {
     
                 case GENERAL:
                     // generateResponse saves internally, so we don't save twice
-                    return aiService.generateResponse(prompt);
+                    return aiService.generateResponse(chatRequest);
     
                 case CREATE_GOAL:
                     try {

@@ -106,9 +106,20 @@ public class AIService {
                 return callGemini(request);
         }
 
-    public String generateResponse(String prompt) {
+    public String generateResponse(com.piyush.aios.ai_os.dto.ChatRequest chatRequest) {
+        String prompt = chatRequest.getPrompt();
         chatService.saveUserMessage(prompt);
-        List<Chat> chats = chatService.getChatHistory();
+
+        List<PartRequest> parts = new java.util.ArrayList<>();
+        parts.add(new PartRequest(prompt));
+
+        if (chatRequest.getFiles() != null && !chatRequest.getFiles().isEmpty()) {
+            for (com.piyush.aios.ai_os.dto.ChatRequest.FileData file : chatRequest.getFiles()) {
+                PartRequest filePart = new PartRequest();
+                filePart.setInlineData(new PartRequest.InlineData(file.getMimeType(), file.getBase64Data()));
+                parts.add(filePart);
+            }
+        }
 
         List<ContentRequest> contents = new java.util.ArrayList<>();
         contents.add(new ContentRequest("user", List.of(new PartRequest(
@@ -116,6 +127,7 @@ public class AIService {
         ))));
         contents.add(new ContentRequest("model", List.of(new PartRequest("Understood. I am ready to help."))));
         
+        List<Chat> chats = chatService.getChatHistory();
         contents.addAll(
             chats.stream()
                 .map(chat -> {
@@ -124,6 +136,9 @@ public class AIService {
                 })
                 .toList()
         );
+
+        // Add the current request with files at the end
+        contents.add(new ContentRequest("user", parts));
 
         GeminiRequest request = new GeminiRequest(contents);
         String aiResponse = callGemini(request);
