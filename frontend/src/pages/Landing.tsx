@@ -355,60 +355,65 @@ export default function Landing() {
         {isBooting && (
           <motion.div 
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black"
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#050505]"
           >
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-              <div className="w-[800px] h-[800px] bg-primary/30 rounded-full blur-[120px]" />
-            </div>
-            
             <div className="relative z-10 flex flex-col items-center">
-              <motion.div 
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="flex items-center gap-4 mb-10"
-              >
-                <div className="relative w-16 h-16 flex items-center justify-center">
-                  <motion.div 
-                    animate={{ rotate: 360 }} 
-                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }} 
-                    className="absolute inset-0 border-t-2 border-primary border-r-2 rounded-full" 
-                  />
-                  <Terminal size={24} className="text-primary animate-pulse" />
-                </div>
-                <span className="text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase">
-                  AI-OS
-                </span>
-              </motion.div>
               
-              <div className="w-80 h-1.5 bg-white/10 rounded-full overflow-hidden shadow-inner relative">
+              {/* Elegant Logo / Spinner */}
+              <div className="relative w-20 h-20 mb-8 flex items-center justify-center">
                 <motion.div 
-                  initial={{ width: "0%" }} 
-                  animate={{ width: "100%" }} 
-                  transition={{ duration: 2, ease: "easeInOut" }} 
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-accent shadow-[0_0_10px_rgba(var(--color-primary),0.8)]" 
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                  className="absolute inset-0 border border-white/10 rounded-full"
                 />
-              </div>
-              
-              <div className="mt-6 flex flex-col items-center gap-1">
-                <motion.p 
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 1 }}
-                  className="text-xs text-primary font-mono tracking-widest uppercase"
+                <motion.div 
+                  animate={{ rotate: -360 }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  className="absolute inset-1 border-t border-primary/60 rounded-full"
+                />
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[0_0_20px_rgba(var(--color-primary),0.3)]"
                 >
-                  Initializing Neural Pathways...
-                </motion.p>
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 }}
-                  className="text-[10px] text-textMuted font-mono"
-                >
-                  Loading OS core modules v2.0.4
-                </motion.p>
+                  <Zap size={20} className="text-white" />
+                </motion.div>
               </div>
+
+              {/* Minimalist Text */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-center"
+              >
+                <span className="text-sm font-medium tracking-[0.3em] text-white/80 uppercase mb-8">
+                  System Initialization
+                </span>
+                
+                {/* Ultra-thin loading bar */}
+                <div className="w-64 h-[1px] bg-white/10 relative overflow-hidden mb-6">
+                  <motion.div 
+                    initial={{ width: "0%" }} 
+                    animate={{ width: "100%" }} 
+                    transition={{ duration: 2.2, ease: "easeInOut" }} 
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-accent shadow-[0_0_10px_rgba(var(--color-primary),0.5)]" 
+                  />
+                </div>
+
+                <div className="flex flex-col items-center gap-2">
+                  <motion.p 
+                    animate={{ opacity: [0.3, 0.7, 0.3] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="text-[10px] text-white/40 font-mono tracking-widest uppercase"
+                  >
+                    Loading Secure Environment...
+                  </motion.p>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         )}
